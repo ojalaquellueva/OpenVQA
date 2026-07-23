@@ -1,0 +1,11 @@
+bak/
+includes/bak/
+under_construction/
+Rplots.pdf
+.Rapp.history
+.Rhistory
+.DS_Store
+custom_scripts/
+manual_validations/
+CHANGELOG_ps.md
+
