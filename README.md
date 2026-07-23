@@ -1,5 +1,7 @@
 # Vegetation Quality Assessment (VQA)
 
+***Warning: this is an outdated README. Will update soon for OpenVQA***
+
 VQA is a semi-automated R pipeline for estimating quality of reclaimed vegetation relative to undisturbed native vegetation.
 
 ## Contents
