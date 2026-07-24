@@ -276,8 +276,8 @@ if ( BM.VEG.TRANSFORM ) {
   qh.boot.current$bm.veg <- transform_column(qh.boot.current$bm.veg, BM.VEG.TRANSFORM.VECTOR)
   qh.baseline$bm.veg <- transform_column(qh.baseline$bm.veg, BM.VEG.TRANSFORM.VECTOR)
   qh.boot.baseline$bm.veg <- transform_column(qh.boot.baseline$bm.veg, BM.VEG.TRANSFORM.VECTOR)
-  qh.net.offset$bm.veg <- transform_column(qh.net.offset$bm.veg, BM.VEG.TRANSFORM.VECTOR)
-  qh.net.boot.offset$bm.veg <- transform_column(qh.net.boot.offset$bm.veg, BM.VEG.TRANSFORM.VECTOR)
+  if ( exists("qh.net.offset") ) qh.net.offset$bm.veg <- transform_column(qh.net.offset$bm.veg, BM.VEG.TRANSFORM.VECTOR)
+  if ( exists("qh.net.boot.offset") ) qh.net.boot.offset$bm.veg <- transform_column(qh.net.boot.offset$bm.veg, BM.VEG.TRANSFORM.VECTOR)
   cat("done\n")
 }
 

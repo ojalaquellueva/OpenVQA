@@ -13,7 +13,7 @@ cat("Loading libraries...")
 # double quotes.
 pkgs <- c(
   "tidyverse",    # General tools; fixes much R awfulness
-  "Hmisc",	      # Import MS Access data; requires mdb-tools
+  "Hmisc",	      # Only needed if importing MS Access data; requires mdb-tools
   "betareg",	    # beta distribution
   "lmtest",	      # Likelihood-ratio test (lrtest)
   "car",		      # Analysis of deviance

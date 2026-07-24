@@ -35,22 +35,14 @@ stop_quietly <- function(exit.msg=NULL) {
 }
 
 #####################################
-# Base directory options
+# Set base directories
 #####################################
 
 # Don't change these
 SRCDIR <- paste0(wd, "/")  # Source code base directory
 BASEDIR <- paste0( dirname(SRCDIR), "/" )  # Application base directory
 
-# Data directory location
-# relative to VQA code directory (repo)
-# I.e., is it IN or OUT of repo?
-# Values: out|in
-# Default: "in" (for public demo data only)
-# Recommended: "out" (keeps private data out of VQA repo)
-LOC_DATA_DIR <- "out"
-
-# Project-specific scripts directory location
+# Location of project-specific scripts directory (PSSD)
 # relative to VQA code directory (repo)
 # I.e., are they IN or OUT of repo?
 # Values: out|in
@@ -62,6 +54,16 @@ LOC_DATA_DIR <- "out"
 # 3. Script params.pa.R
 # Project-specific scripts directory name set below
 LOC_PSFILES_DIR <- "out"
+
+# Location of data directory 
+# relative to VQA code directory (repo)
+# I.e., is it IN or OUT of repo?
+# Values: out|in|pssd
+#  in: for public demo data only
+#  out: outside VQA repo, at same level
+#  pssd: inside the PSSD (see above)
+LOC_DATA_DIR <- "pssd"
+LOC_DATA_DIR <- "in"
 
 # Project-specific scripts directory (PSSD) name
 # Default: "src_conf/"
@@ -75,23 +77,26 @@ LOC_PSFILES_DIR <- "out"
 # above the main VQA code directory (repository)
 # Include trailing forward slash "/"
 # SRCDIR_CONF <- "src_conf/"  # Default
+SRCDIR_CONF <- "vqa_conf_tap/"
 SRCDIR_CONF <- "src_conf_demo/"
-SRCDIR_CONF <- "src_conf_tap/"
 
 # Apply the above options
-if (LOC_DATA_DIR=="out") {
-  # Data are *outside* SRCDIR
-  DATA_BASEDIR_FINAL <- paste0( BASEDIR, "data/" )
-} else {
-  # Data are *inside* SRCDIR
-  DATA_BASEDIR_FINAL <- paste0( SRCDIR, "data/" ) 
-}
 if (LOC_PSFILES_DIR=="out") {
   # PSSD is *outside* SRCDIR
   BASEDIR_PSFILES <- paste0( BASEDIR, SRCDIR_CONF )
 } else {
   # PSSD is *inside* SRCDIR
   BASEDIR_PSFILES <- SRCDIR
+}
+if (LOC_DATA_DIR=="out") {
+  # Data are *outside* main VQA SRCDIR
+  DATA_BASEDIR_FINAL <- paste0( BASEDIR, "data/" )
+} else if (LOC_DATA_DIR=="pssd") {
+  # Data are in PSSD, wherever it is
+  DATA_BASEDIR_FINAL <- paste0( BASEDIR_PSFILES, "data/" )
+} else {
+  # Data are inside main VQA SRCDIR (generally only for demo data)
+  DATA_BASEDIR_FINAL <- paste0( SRCDIR, "data/" ) 
 }
 
 #####################################
@@ -616,17 +621,22 @@ ALLOW.TRADE.UP <- FALSE
 # * Only applies if ALLOW.TRADE.UP==TRUE
 VEG.TRADE.UP <- ""    # Use this value to use all veg with QN.net>0
 
+# Set base directories
+QH.NET.BASEDIR <- paste0(DATA_BASEDIR_PROJ, ASSESS)
+QH.NET.BASEDIR.BASELINE <- paste0(DATA_BASEDIR_PROJ, ASSESS.BASELINE)
+QH.NET.BASEDIR.OFFSET <- paste0(DATA_BASEDIR_PROJ, ASSESS.OFFSET)
+
 # QH.net results directory
 # Set to subdirectory of current assessment data 
 # directory, as defined by parameter ASSESS
 # Comparison is always to the baseline assessment
-QH.NET.DIR <- paste0(DATA_BASEDIR_PROJ, ASSESS, "/qh.net/")
+QH.NET.DIR <- paste0(QH.NET.BASEDIR, "/qh.net/")
 QH.NET.RESULTSDIR <- paste0(QH.NET.DIR,"results/")
 
 # QH.net input file directories
-QH.NET.INPUTDIR.CURRENT <- paste0( DATA_BASEDIR_PROJ, ASSESS, "/results/" ) # QH files
-QH.NET.INPUTDIR.BASELINE <- paste0( DATA_BASEDIR_PROJ, ASSESS.BASELINE, "/results/" ) # QH files
-QH.NET.INPUTDIR.OFFSET <- paste0( DATA_BASEDIR_PROJ, ASSESS.OFFSET, "/qh.net/results/" ) # Net QH files
+QH.NET.INPUTDIR.CURRENT <- paste0( QH.NET.BASEDIR, "/results/" ) # QH files
+QH.NET.INPUTDIR.BASELINE <- paste0( QH.NET.BASEDIR.BASELINE, "/results/" ) # QH files
+QH.NET.INPUTDIR.OFFSET <- paste0( QH.NET.BASEDIR.OFFSET, "/qh.net/results/" ) # Net QH files
 
 # Transform one or more vegetation classes? (TRUE|FALSE)
 # Generally, keep this set to FALSE
