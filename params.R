@@ -126,6 +126,20 @@ global.params.loaded<-""
 params.pa.file <- paste0(BASEDIR_PSFILES, "params.pa.R")
 source(params.pa.file)
 
+# **** Todo: test and activate this section next ****
+# # Command-line options override parameter-file defaults
+# if (exists("opt_project") && !is.null(opt_project) &&
+#     length(opt_project) == 1 && !is.na(opt_project) &&
+#     nzchar(opt_project)) {
+#   PROJ <- opt_project
+# }
+# 
+# if (exists("opt_assess") && !is.null(opt_assess) &&
+#     length(opt_assess) == 1 && !is.na(opt_assess) &&
+#     nzchar(opt_assess)) {
+#   ASSESS <- opt_assess
+# }
+
 # Throw intelligible error if PROJ or ASSESS not properly set
 if ( !all(sapply(c("PROJ", "ASSESS"), exists)) ) {
   msg.err <- "ERROR: One or both parameters PROJ and ASSESS are undefined!\n"

@@ -1,114 +1,206 @@
+#!/usr/bin/env Rscript
+
 # =================================================================================
 # Script:         vqa.R
-# Purpose:        Controller script for all Vegetation Quality Analysis operations
+# Purpose:        Controller for all Vegetation Quality Analysis operations
 # Author:         Brad Boyle (ojalaquellueva@gmail.com)
 # Date Created:   2026-08-20
 # R Version:      R version 4.4.1 (2024-06-14)
-# =================================================================================
-
-# ==============================================
-# Note: This script take command line arguments, 
-# and MUST be run from the shell, or the Terminal 
-# window in RStudio
+# 
+# Note: This script take command line arguments and MUST be run from the
+#   shell (Linux/Mac) or the RStudio Terminal tab (all operating systems).
+#   It will not run correctly from the R Console.
 # ==============================================
 
 # ===============================================
-# Load libraries for just this script (others
-# loaded later, depending on which part of the
-# pipeline is called)
+# Libraries (for this script only)
 # ===============================================
 
-# CLI Parsing Library
 if (!requireNamespace("optparse", quietly = TRUE)) {
-  stop("The 'optparse' package is required. Install it using install.packages('optparse')", call. = FALSE)
+  stop("The 'optparse' package is required. Install it using install.packages('optparse')", 
+    call. = FALSE)
 }
 library(optparse)
 
-# ===============================================
-# Parameters
-# ===============================================
+# ============================================================
+# Define command-line argument specifications
+# ============================================================
 
-# ===============================================
-# Parameters
-# ===============================================
-
-# Each mode is a different step in the vqa pipeline.
-# It is also the name of the file launched ("sourced")
-# by this script, minus the ".R" extension
-allowed_modes <- c("import", "vqa.batch", "qh.net")
-
-# Help hint appended to all error messages
-hint_help <- "(Use option '-h' or '--help' for full usage details)"
-
-# ===============================================
-# Main
-# ===============================================
-
-# Define Command-Line Options
-option_list <- list(
-  make_option(
-    c("-m", "--mode"), type = "character", default = NULL,
-    help = "Execution mode: 'import', 'vqa_batch', or 'qh.net' [REQUIRED]", 
-    metavar = "MODE"),
-  make_option(c("-p", "--project"), type = "character", default = NULL, 
-    help = "Project code [REQUIRED]", metavar = "PROJ"),
-  make_option(c("-a", "--assess"), type = "character", default = NULL, 
-    help = "Assessment code [REQUIRED]", metavar = "ASSESS")
+option_spec <- list(
+  mode = list(
+    long     = "--mode",
+    short    = "-m",
+    required = TRUE,
+    allowed  = c("import", "vqa.batch", "qh.net")
+  ),
+  project = list(
+    long     = "--project",
+    short    = "-p",
+    required = TRUE,
+    allowed  = NULL
+  ),
+  assess = list(
+    long     = "--assess",
+    short    = "-a",
+    required = TRUE,
+    allowed  = NULL
+  )
 )
 
-# Parse Arguments
+
+# ============================================================
+# Build optparse specification
+# ============================================================
+
+option_list <- lapply(
+  option_spec,
+
+  function(spec) {
+    make_option(
+      c(spec$short, spec$long),
+      type = "character"
+    )
+  }
+
+)
+
 parser <- OptionParser(
-  usage = "usage: %prog --mode <MODE> --project <PROJ> --assess <ASSESS>",
-  add_help_option = TRUE, 
   option_list = option_list,
-  description = "\nVegetation Quality Assessment analysis pipeline."
+  description = "Vegetation Quality Assessment",
+  #usage = "usage: %prog --mode <MODE> --project <PROJ> --assess <ASSESS>",
+  add_help_option = FALSE
 )
-args <- parse_args(parser)
 
-# ==================
-# Validate Arguments
-# ==================
+# ============================================================
+# Retrieve raw command-line arguments
+# ============================================================
 
-# Enforce required --mode argument
-if (is.null(args$mode)) { # Argument missing
-  msg_err <- "Missing required option --mode | -m"
-  stop(paste0(msg_err, " ", hint_help), call. = FALSE)
+args <- commandArgs(trailingOnly = TRUE)
+
+# ============================================================
+# Handle built-in optparse help request
+# ============================================================
+
+if ("-h" %in% args || "--help" %in% args) {
+  # Some fussy re-formatting
+  raw_lines <- capture.output(print_help(parser))
+  clean_lines <- raw_lines[!grepl("^\\s*$", raw_lines)]
+  final_lines <- c(clean_lines[2], clean_lines[-2])
+  final_lines <- gsub("=", " ", final_lines)
+  cat(final_lines, sep = "\n")
+  quit(status = 0)
 }
-if (!(args$mode %in% allowed_modes)) { # Invalid argument
-  msg_err <- "Invalid argument for --mode | -m"
-  stop(paste0(msg_err, " ", hint_help), call. = FALSE)
-}
-# Assign validated option to a clean variable name
-opt_mode <- args$mode
 
-# Check that remaining options have values
-if (is.null(args$project)) { # Argument missing
-  msg_err <- "Missing required argument: --project / -m"
-  stop(paste0(msg_err, " ", hint_help), call. = FALSE)
-}
-# 'opt_' prefix marks this as command line setting:
-# takes precedence over parameters set in params files
-opt_project <- args$project
+# ============================================================
+# Generic option validator
+# ============================================================
 
-if (is.null(args$assess)) { # Argument missing
-  msg_err <- "Missing required argument: --assess / -m"
-  stop(paste0(msg_err, " ", hint_help), call. = FALSE)
-}
-# 'opt_' prefix marks this as command line setting:
-# takes precedence over parameters set in params files
-opt_assess <- args$assess
+validate_option <- function(args, spec) {
+  option_names <- c(spec$long, spec$short)
+  
+  # Find either the long or short form
+  option_index <- which(args %in% option_names)
+  
+  # ----------------------------------------------------------
+  # Required option missing
+  # ----------------------------------------------------------
+  
+  if (length(option_index) == 0) {
+    
+    if (spec$required) {
+      stop(
+        sprintf(
+          "Option '%s' is required.",
+          spec$long
+        ),
+        call. = FALSE
+      )
+    }
+    
+    return(invisible(TRUE))
+  }
+  
+  # Use the first occurrence
+  option_index <- option_index[1]
 
-# Find where this script is located
-# Only works from shell, but OK for this script.
+  # ----------------------------------------------------------
+  # Option value missing
+  # ----------------------------------------------------------
+  
+  if (option_index == length(args)) {
+    stop(
+      sprintf(
+        "Option '%s' requires a value.",
+        spec$long
+      ),
+      call. = FALSE
+    )
+  }
+  
+  value <- args[option_index + 1]
+  
+  if (grepl("^-", value)) {
+    stop(
+      sprintf(
+        "Option '%s' requires a value.",
+        spec$long
+      ),
+      call. = FALSE
+    )
+  }
+  
+  # ----------------------------------------------------------
+  # Option value invalid
+  # ----------------------------------------------------------
+  
+  if (!is.null(spec$allowed) && !value %in% spec$allowed) {
+    stop(
+      sprintf(
+        paste0(
+          "Invalid value for option '%s': '%s'.\n",
+          "Allowed values: %s."
+        ),
+        spec$long,
+        value,
+        paste(spec$allowed, collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+  
+  invisible(TRUE)
+}
+
+# ============================================================
+# Validate command line
+# ============================================================
+
+for (spec in option_spec) {
+  validate_option(args, spec)
+}
+
+# ============================================================
+# Parse with optparse
+# ============================================================
+
+opt <- parse_args(parser)
+
+# Save the option values as variables. These will over-ride any
+# corresponding parameter values set in the parameter files.
+opt_mode <- opt$mode
+opt_project <-opt$project
+opt_assess <- opt$assess
+
+# ============================================================
+# Launch the requested operation
+# ============================================================
+
+# Find base directory (where this script is located)
 initial_options <- commandArgs(trailingOnly = FALSE)
 file_arg <- "--file="
 script_name <- sub(file_arg, "", initial_options[grep(file_arg, initial_options)])
-script_dir <- dirname(script_name)
-script_dir <- normalizePath(script_dir, mustWork = TRUE)
+script_dirname <- dirname(script_name)
+script_dir <- normalizePath(script_dirname, mustWork = TRUE)
 
 # Launch the target script
 source(file.path(script_dir, paste0(opt_mode, ".R")))
-
-
-
-
