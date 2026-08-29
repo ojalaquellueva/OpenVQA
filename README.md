@@ -4,14 +4,14 @@ VQA is a R language data analysis pipeline for estimating quality and quality he
 
 ## Contents
 
-- [What is VQA?](#What is VQA?)  
+- [What is VQA?](#What-VQA)  
 - [Dependencies](#Dependencies)  
-- [Installation & setup](#Installation & setup)  
+- [Installation & setup](#Installation-setup)  
 - [Usage](#Usage)  
 - [Examples](#Examples)  
 - [References](#References)  
 
-<a name="What is VQA?"></a>
+<a name="What-VQA"></a>
 ## What is VQA?
 
 Vegetation Quality Assessment (VQA) is an application for estimating condition (quality) of reclaimed vegetation relative to undisturbed native vegetation, and quantifying negative and positive impacts on biodiversity in terms of quality hectares. VQA is also a loss-gain accounting workflow encompassing experimental design, field sampling, preparation of GIS inputs, statistical analysis, and reporting. 
@@ -39,7 +39,7 @@ You can read more about VQA in detail in this open access [publication](https://
 * R >= 4.4.3   
 * Multiple R packages (see script `libraries.R` for details)  
 
-<a name="Installation & setup"></a>
+<a name="Installation-setup"></a>
 ## Installation & setup
 * All commands below are shell commands run from from a terminal application on a Linux or Mac (OSX) machine, or from the RStudio terminal window.
 

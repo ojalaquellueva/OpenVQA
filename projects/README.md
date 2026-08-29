@@ -2,10 +2,10 @@
 
 # Contents
 - [Introduction](#Introduction)  
-- [VQA demonstration projects](#VQA demonstration projects)  
-- [Directory structure](#Directory structure)  
-- [Application structure](#Application structure)  
-- [Set up](#Set up)
+- [VQA demonstration projects](#VQA-demonstration-projects)  
+- [Directory structure](#Directory-structure)  
+- [Application structure](#Application-structure)  
+- [Set up](#Set-up)
 - [Usage](#Usage)
 - [Examples](#Examples)
 
@@ -14,12 +14,12 @@
 
 This directory contains data, parameters and code specific to particular VQA projects. As downloaded from the [OpenVQA code repository](https://github.com/ojalaquellueva/OpenVQA) on GitHub, it contains two demonstration projects that can be run "out of the box" to test VQA behavior and provide examples of VQA input and output. Although VQA will detect the projects folder in either location, we strongly recommend that you move this directory ***outside*** the VQA code repository after installing VQA on your system. 
 
-<a name="VQA demonstration projects"></a>
+<a name="VQA-demonstration-projects"></a>
 ## VQA demonstration projects
 
 The two VQA demo projects are **vqa-demo1** and **vqa-demo2**. See the READMEs inside the project data directories for details of each project.
 
-<a name="Directory structure"></a>
+<a name="Directory-structure"></a>
 ## Directory structure
 
 The top-level folder of the projects directory is called "projects/". Inside, at the next level down, will be one or more project directories. The name of each project directory is also the project code (parameter PROJ) for that project. Parameter PROJ is used a lot by the VQA code. Note that each project directory ("<PROJ>/") contains a data directory ("data/"), a project-specific parameters directory ("params/"), and a project-specific import ("import/"). 
@@ -51,7 +51,7 @@ projects/
 
 ```
 
-<a name="Application structure"></a>
+<a name="Application-structure"></a>
 ## Application structure
 * The optimum top level structure of your VQA application should be as follows:
 
@@ -62,7 +62,7 @@ vqa/           [Application base directory]
 
 ```
 
-<a name="Set up"></a>
+<a name="Set-up"></a>
 ## Set up
 
 ### How Does VQA find my project?
