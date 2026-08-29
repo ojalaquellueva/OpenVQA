@@ -14,7 +14,7 @@
 # Set paths, load functions & parameters
 #########################################
 
-rm(list=ls())		# clear the workspace
+#rm(list=ls())		# clear the workspace
 
 if(!exists("params.loaded", mode="function")) {
   # Set working directory (base application directory)
@@ -28,7 +28,6 @@ if(!exists("params.loaded", mode="function")) {
 job <- "qh.net"
 
 source("includes/functions.R", local=TRUE)
-#source("params.R")
 source(paste0(SRCDIR, "params.R"))
 
 ###################################################

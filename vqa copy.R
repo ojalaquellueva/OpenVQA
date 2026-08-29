@@ -29,56 +29,35 @@ library(optparse)
 # Application name for interactive display
 app_name <- "Vegetation Quality Assessment"
 
-# ===============================================
-# Utility functions
-# ===============================================
-
-# Append forward slash to end of file path, including  
-# Windows systems. 
-normalize_dir <- function(path) {
-  norm_path <- normalizePath(path, winslash = "/", mustWork = FALSE)
-  if (!endsWith(norm_path, "/")) {
-    norm_path <- paste0(norm_path, "/")
-  }
-  return(norm_path)
-}
-
 # ============================================================
 # Define command-line argument specifications
 # ============================================================
 
 option_spec <- list(
   mode = list(
-    long        = "--mode",
-    short       = "-m",
-    type        = "character",
-    takes_value = TRUE,
-    required    = TRUE,
-    allowed     = c("import", "vqa.batch", "qh.net")
+    long     = "--mode",
+    short    = "-m",
+    required = TRUE,
+    allowed  = c("import", "vqa.batch", "qh.net")
   ),
   project = list(
-    long        = "--project",
-    short       = "-p",
-    type        = "character",
-    takes_value = TRUE,
-    required    = TRUE,
-    allowed     = NULL
+    long     = "--project",
+    short    = "-p",
+    required = TRUE,
+    allowed  = NULL
   ),
   assess = list(
-    long        = "--assess",
-    short       = "-a",
-    type        = "character",
-    takes_value = TRUE,
-    required    = TRUE,
-    allowed     = NULL
+    long     = "--assess",
+    short    = "-a",
+    required = TRUE,
+    allowed  = NULL
   ),
   quiet = list(
-    long        = "--quiet",
-    short       = "-q",
-    type        = "logical",
-    takes_value = FALSE,
-    default     = FALSE,
-    required    = FALSE, # Don't omit, required for pre-optparse validations
+    long     = "--quiet",
+    short    = "-q",
+    action="store_false", 
+    default=TRUE,
+    required = FALSE, # Don't omit, required for pre-optparse validations
     help="Turn off all messages except errors [default %default]"
   )
 )
@@ -89,27 +68,14 @@ option_spec <- list(
 
 option_list <- lapply(
   option_spec,
+
   function(spec) {
-    
-    if (spec$takes_value) {
-      default <- if (!is.null(spec$default)) {
-        spec$default
-      } else {
-        NULL
-      }
-      make_option(
-        c(spec$short, spec$long),
-        type = spec$type,
-        default = default
-      )
-    } else {
-      make_option(
-        c(spec$short, spec$long),
-        action = "store_true",
-        default = spec$default
-      )
-    }
+    make_option(
+      c(spec$short, spec$long),
+      type = "character"
+    )
   }
+
 )
 
 parser <- OptionParser(
@@ -120,8 +86,12 @@ parser <- OptionParser(
 )
 
 # ============================================================
-# Retrieve raw command-line arguments
+# Echo application name & retrieve raw command-line arguments
 # ============================================================
+
+cat(rep("-", nchar(app_name)), "\n", sep="")
+cat(app_name, "\n", sep="")
+cat(rep("-", nchar(app_name)), "\n", sep="")
 
 args <- commandArgs(trailingOnly = TRUE)
 
@@ -145,10 +115,12 @@ if ("-h" %in% args || "--help" %in% args) {
 
 validate_option <- function(args, spec) {
   option_names <- c(spec$long, spec$short)
+  
+  # Find either the long or short form
   option_index <- which(args %in% option_names)
   
   # ----------------------------------------------------------
-  # Option absent
+  # Required option missing
   # ----------------------------------------------------------
   
   if (length(option_index) == 0) {
@@ -156,7 +128,7 @@ validate_option <- function(args, spec) {
     if (spec$required) {
       stop(
         sprintf(
-          "[REQUIRED]: option '%s' is required.",
+          "Option '%s' is required.",
           spec$long
         ),
         call. = FALSE
@@ -166,24 +138,17 @@ validate_option <- function(args, spec) {
     return(invisible(TRUE))
   }
   
+  # Use the first occurrence
   option_index <- option_index[1]
-  
+
   # ----------------------------------------------------------
-  # Flag -- no value to validate
-  # ----------------------------------------------------------
-  
-  if (!spec$takes_value) {
-    return(invisible(TRUE))
-  }
-  
-  # ----------------------------------------------------------
-  # Value missing
+  # Option value missing
   # ----------------------------------------------------------
   
   if (option_index == length(args)) {
     stop(
       sprintf(
-        "[VALUE_MISSING]: option '%s' requires a value.",
+        "Option '%s' requires a value.",
         spec$long
       ),
       call. = FALSE
@@ -195,23 +160,22 @@ validate_option <- function(args, spec) {
   if (grepl("^-", value)) {
     stop(
       sprintf(
-        "[VALUE_MISSING]: option '%s' requires a value.",
+        "Option '%s' requires a value.",
         spec$long
       ),
       call. = FALSE
     )
   }
   
-  
   # ----------------------------------------------------------
-  # Value invalid
+  # Option value invalid
   # ----------------------------------------------------------
   
   if (!is.null(spec$allowed) && !value %in% spec$allowed) {
     stop(
       sprintf(
         paste0(
-          "[INVALID_VALUE]: invalid value for '%s': '%s'.\n",
+          "Invalid value for option '%s': '%s'.\n",
           "Allowed values: %s."
         ),
         spec$long,
@@ -251,17 +215,6 @@ opt_assess <- opt$assess
 quiet <- opt$quiet
 
 # ============================================================
-# Echo app name & mode
-# ============================================================
-
-if (!quiet) {
-  cat(rep("-", nchar(app_name)), "\n", sep="")
-  cat(app_name, "\n", sep="")
-  cat(rep("-", nchar(app_name)), "\n", sep="")
-  cat("Mode: ", opt_mode, "\n", sep="")
-}
-
-# ============================================================
 # Locate project and assessment directories
 # ============================================================
 
@@ -276,32 +229,34 @@ this_script <- sub(file_arg, "", initial_options[grep(file_arg, initial_options)
 this_script_dir <- dirname(this_script)
 
 # Save as "opt_" variables to indicate parameters set by controller 
-opt_src_path <- normalizePath(this_script_dir, mustWork = TRUE)
-opt_app_path <- dirname(opt_src_path)
-
-if (!quiet) {
-  cat("Application directory: ", opt_app_path, "\n", sep="")
-  cat("Source code directory: ", opt_src_path, "\n", sep="")
-}
+opt_src_dir <- normalizePath(this_script_dir, mustWork = TRUE)
+opt_app_dir <- dirname(opt_src_dir)
 
 # ----------------------------------------------------------
 # Locate project directory
-#
 # Notes: 
-# 1. Looks in the following locations in the order shown: 
-#    `<opt_base_dir_app>/projects/opt_proj>/` 
-#    `<opt_base_dir_src>/projects/opt_proj>/`
-# 2. Will add option to set custom project path via command
-#    line later
+# 1. For now, assume default directory name "<vqa_>opt_proj".
+# 2. Looks in the following locations in the order shown: 
+#    `<opt_base_dir_app>/../projects/` and `<opt_base_dir_src>/`.
+# 3. Will add option custom project path command line option later
 # ----------------------------------------------------------
 
-opt_project_path <- file.path(opt_app_path, "projects", opt_project)
+opt_project_path <- file.path(opt_app_dir, "projects", opt_project)
+cat("Locating project directory '", opt_project_path, "'...")
 
-if (!dir.exists(opt_project_path)) {
+if (dir.exists(opt_project_path)) {
+  cat("done\n")
+} else {
+  cat("failed\n")
+  
   # Check alternate path
-  opt_project_path <- file.path(opt_src_path, "projects", opt_project)
-
-  if (!dir.exists(opt_project_path)) {
+  opt_project_path <- file.path(opt_src_dir, opt_project)
+  cat("Checking alternate location '", opt_project_path, "'...")
+  
+  if (dir.exists(opt_project_path)) {
+    cat("done\n")
+  } else {
+    cat("failed\n")
     stop(
       sprintf(
         "Project directory for project '%s' not found.",
@@ -312,67 +267,36 @@ if (!dir.exists(opt_project_path)) {
   }
 }
 
-# Set project data base directory relative to project directory
-opt_data_base_path <- file.path(opt_project_path, "data")
-
-# ----------------------------------------------------------
-# Echo project & project directory
-# ----------------------------------------------------------
-
-if (!quiet) {
-  cat("Project: ", opt_project, "\n", sep="")
-  cat("Project directory: ", opt_project_path, "\n", sep="")
-  cat("Project data directory: ", opt_data_base_path, "\n", sep="")
-}
-
 # ----------------------------------------------------------
 # Locate assessment data directory
-#
-# Note: Only one possible locations: 
-# 2. `<opt_project_path>/data/<opt_proj>/<opt_assess>/`
-#    * Support multiple data directories for >1 projects
-#    * Even if only 1 project, you must use this structure
+# Notes: 
+# 1. For now, assume default "<vqa_>opt_proj".
+#    Later will add project path command line option.
+# 2. Looks in the following locations in the order shown: 
+#    `<opt_base_dir_app>/../projects/` and `<opt_base_dir_src>/`.
 # ----------------------------------------------------------
 
-opt_assess_path <- file.path(opt_data_base_path, opt_project, opt_assess)
-
-if (!dir.exists(opt_assess_path)) {
-  stop(
-    sprintf(
-      "Data directory for assessment '%s' not found.",
-      opt_assess
-    ),
-    call. = FALSE
-  )
-}
-
-# ----------------------------------------------------------
-# Echo assessment & assessment data directory
-# ----------------------------------------------------------
-
-if (!quiet) {
-  cat("Assessment: ", opt_assess, "\n", sep="")
-  cat("Assessment data directory: ", opt_assess_path, "\n", sep="")
-}
 
 # ============================================================
-# Confirm (if applicable) and launch the requested operation
+# Launch the requested operation
 # ============================================================
-
-# Display parameters & confirm operation
-if (!quiet) {
-  yes <- c("y", "Y", "Yes", "yes")
-  cat("Launch the requested operation? (y/n):")
-  response <- readLines("stdin",n=1)
-  if ( ! response %in% yes ) {
-    cat("Operation cancelled\n")
-    quit(save = "no", status = 0) 
-  } else {
-    cat("\n")
-  }
-}
 
 # Set target path and execute the requested script
 target_script_name <- paste0(opt_mode, ".R")
-target_script <- file.path(opt_src_path, target_script_name)
-source(target_script)
+target_script <- file.path(opt_src_dir, target_script_name)
+
+
+# Echo all paths
+cat("opt_src_dir: ", opt_src_dir, "\n", sep="")
+cat("opt_app_dir: ", opt_app_dir, "\n", sep="")
+cat("opt_project_path: ", opt_project_path, "\n", sep="")
+# cat("opt_assess_path: ", opt_assess_path, "\n", sep="")
+# cat("opt_data_path: ", opt_data_path, "\n", sep="")
+cat("target_script_name: ", target_script_name, "\n", sep="")
+cat("target_script: ", target_script, "\n", sep="")
+
+
+
+cat("\n")
+
+#source(target_script)

@@ -6,7 +6,7 @@
 # Set paths, load functions & parameters
 #########################################
 
-rm(list=ls())		# clear the workspace
+#rm(list=ls())		# clear the workspace
 
 # Set working directory (base application directory)
 # Must set first to set remaining directory parameters

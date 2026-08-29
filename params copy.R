@@ -217,6 +217,15 @@ figs.dir <- FIGDIR			# For compatibility with legacy variable names
 figdir.abs <- paste(wd, figs.dir, sep='/')
 LOGDIR <- paste0(DATA_BASEDIR, "log/")		# log file directory
 
+
+cat("\n", sep="")
+cat("INPUTDIR: ", INPUTDIR, "\n", sep="")
+cat("RESULTSDIR: ", RESULTSDIR, "\n", sep="")
+cat("FIGDIR: ", FIGDIR, "\n", sep="")
+cat("LOGDIR: ", LOGDIR, "\n", sep="")
+cat("\n", sep="")
+
+
 # Create data directories if not exist
 dir.create(file.path(INPUTDIR), showWarnings = FALSE)
 dir.create(file.path(RESULTSDIR), showWarnings = FALSE)
