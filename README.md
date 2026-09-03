@@ -1,6 +1,6 @@
 # Vegetation Quality Assessment (VQA)
 
-VQA is a R language data analysis pipeline for determining similarity of reclaimed vegetation to undisturbed native vegetation.
+VQA is a R language data analysis pipeline for measuring similarity of reclaimed vegetation to undisturbed native vegetation.
 
 ## Contents
 
@@ -15,7 +15,7 @@ VQA is a R language data analysis pipeline for determining similarity of reclaim
 <a name="What-VQA"></a>
 ## What is VQA?
 
-VQA is an analysis framework for determining the similarity of reclaimed vegetation to undisturbed native vegetation (benchmark vegetation). Similarity, called "Quality" in VQA, is estimated by comparing ecological indicators in random samples of disturbed vegetation to samples from the corresponding benchmark vegetation. Quality is then be used to calculate Quality Hectares (QH), the quality-discount area of the reclaimed vegetation.  Subtracting baseline QH (QH of vegetation before disturbance) from current QH gives Net Quality Hectares, a key measure of progress towards No Net Loss and, ultimately, Net Positive Impact. 
+VQA is an analysis framework for measuring similarity of reclaimed or disturbed vegetation to undisturbed native vegetation (also called the benchmark vegetation). Similarity, called "Quality" in VQA, is estimated by comparing ecological indicators in random samples of reclaimed vegetation to samples from the corresponding benchmark vegetation. Quality can then be used to calculate Quality Hectares (QH), the quality-discount area of the reclaimed vegetation.  Subtracting baseline QH (QH of vegetation before disturbance) from current QH gives Net Quality Hectares, a key measure of progress towards No Net Loss and, ultimately, Net Positive Impact. 
 
 ### What is quality?
 
@@ -179,19 +179,28 @@ VQA will know where to find your data if:
 <a name="Usage"></a>
 ## Usage
 
-### General syntax
-* VQA must be run from the command line, either the Terminal application in Linux & Mac OSX, or the RStudio Terminal tab (**not** the Console) in all operating systems.
-* After installing VQA, 
+* VQA must be run from the command line, either the Terminal application in Linux & Mac OSX, or the RStudio Terminal tab in all operating systems, including Windows. 
+* Note: the Terminal tab in RStudio is used for entering system commands. It is not the same as the Console tab used to paste and run R code.
+
+### General syntax 
 
 ```
 Rscript vqa.R --mode MODE --project PROJ --assess ASSESS
 
 ```
-* Options mode, project and assess are all required
-* Option mode determines the VQA program to run, and takes on of three values: "import" (import raw data and normalize to VQA input schema), "vqa.batch" (complete VQA analysis of a single assessment) and "qh.net" (Net Quality Hectares analysis of multiple assessments)
-* Options project and assess correspond to parameters PROJ (the project code) and ASSESS (the code of an assessment in project PROJ)
+* Options mode, project and assess are required
+* Option mode determines the VQA program to run, and takes one of three values: 
 
-Alternatively, you can use short option codes:
+  Mode value | Action
+  ---------- | ---------- 
+  import |  Import raw data and normalize to VQA input schema.
+  vqa.batch |  Complete VQA analysis for a single assessment.
+  qh.net |  Net Quality Hectares comparison of two or more assessments.
+
+
+* Options project and assess correspond to parameters PROJ (project code) and ASSESS (assessment code)
+
+Alternatively, you can use the following short option codes:
 
 ```
 Rscript vqa.R -m MODE -p PROJ -a ASSESS
@@ -238,12 +247,14 @@ Rscript vqa.R -m vqa.batch -p vqa-demo1 -a main_001_current
 ```
 
 ### Example 2: Offset Net Quality Hectares analysis, using vqa-demo2
-* This example assumes that you have already completed the VQA analysis of assessments offset_baseline and offset_current.
+* This example assumes that you have already run VQA for assessments offset_baseline and offset_current.
 * Currently, you can only name the current assessment on the command line. You must set the name of the baseline assessment in the PSP file for the project. I will add the baseline assessment as a command line option in the near future.
 
 ```
 Rscript vqa.R -m qh.net -p vqa-demo2 -a offset_current
 ```
+
+* For more example VQA analyses, see the READMEs for both demonstration projects.
 
 <a name="References"></a>
 ## References
