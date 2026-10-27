@@ -296,19 +296,33 @@ if (!quiet) {
 # ----------------------------------------------------------
 
 opt_project_path <- file.path(opt_app_path, "projects", opt_project)
+if (!quiet) {
+  cat("Checking for project directory: ", opt_project_path, "...", sep="")
+}
 
 if (!dir.exists(opt_project_path)) {
+  if (!quiet) cat("not found!\n")
+  
   # Check alternate path
   opt_project_path <- file.path(opt_src_path, "projects", opt_project)
-
+  if (!quiet) {
+    cat("Checking for project directory: ", opt_project_path, "...", sep="")
+  }
+  
   if (!dir.exists(opt_project_path)) {
-    stop(
-      sprintf(
-        "Project directory for project '%s' not found.",
-        opt_project
-      ),
-      call. = FALSE
-    )
+    # stop(
+    #   sprintf(
+    #     "Project directory for project '%s' not found.",
+    #     opt_project
+    #   ),
+    #   call. = FALSE
+    # )
+    if (!quiet) {
+      cat ("not found!\n")
+      cat("Operation aborted\n")
+      quit(save = "no", status = 1) 
+    }
+    
   }
 }
 

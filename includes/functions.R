@@ -6555,3 +6555,41 @@ transform_column <- function(column, mapping_vector) {
   return(column)
 }
 
+getwd_abs <- function() {
+  ####################################################
+  # Most versatile method for determining absolute
+  # path of current script. Works on all OS.
+  #
+  # Usage:
+  # curr_script <- getwd_abs()              # includes path
+  # curr_script_dir <- dirname(curr_script) # path only
+  ####################################################
+
+  # RStudio (Editor Tab check)
+  if (interactive() && requireNamespace("rstudioapi", quietly = TRUE) && rstudioapi::isAvailable()) {
+    p <- rstudioapi::getSourceEditorContext()$path
+    if (is.character(p) && nzchar(p)) {
+      return(normalizePath(p, winslash = "/", mustWork = FALSE))
+    }
+  }
+  
+  # Terminal execution via Rscript
+  args <- commandArgs(trailingOnly = FALSE)
+  file_arg <- grep("^--file=", args, value = TRUE)
+  if (length(file_arg) > 0) {
+    return(normalizePath(sub("^--file=", "", file_arg[1]), winslash = "/", mustWork = FALSE))
+  }
+  
+  # Running via source()
+  sys_frames <- sys.frames()
+  for (i in seq_along(sys_frames)) {
+    if (exists("ofile", envir = sys_frames[[i]], inherits = FALSE)) {
+      return(normalizePath(get("ofile", envir = sys_frames[[i]]), winslash = "/", mustWork = FALSE))
+    }
+  }
+  
+  # Fallback
+  return(normalizePath(getwd(), winslash = "/"))
+}
+
+
