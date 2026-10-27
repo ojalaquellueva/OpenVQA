@@ -43,6 +43,12 @@ source("includes/functions.R", local=TRUE)
 # file in directory params/
 # Load global params file if not already loaded
 #if(!exists("global.params.loaded", mode="function")) source(paste0(SRCDIR, "params.R"))
+# Display parameters & confirm operation
+op_name_pars <- "Load parameters"
+cat(rep("-", nchar(op_name_pars)), "\n", sep="")
+cat(op_name_pars, "\n", sep="")
+cat(rep("-", nchar(op_name_pars)), "\n", sep="")
+cat("General parameters file 'params.R'...done\n")
 source(paste0(SRCDIR, "params.R"))
 
 # Set project-specific import file name
@@ -59,6 +65,7 @@ cat(rep("-", nchar(op_name)), "\n", sep="")
 cat(op_name, "\n", sep="")
 cat(rep("-", nchar(op_name)), "\n", sep="")
 cat(paste0("Import raw data for project '", PROJ, "', assessment '", ASSESS, "' using the following settings: \n", sep=""))
+cat("Project-specific import file: '", ps.import.file.name, "'\n", sep="")
 cat(paste0(MSG.CONF.START, MSG.CONF.IMP))
 
 if (interactive()==FALSE) {
@@ -95,7 +102,6 @@ source("libraries.R")
 ######################################
 
 # Run the project-specific import script, if applicable
-#ps.import.file <- paste0("import/", ps.import.file.name)
 ps.import.file <- paste0(BASEDIR_PSFILES, "import/", ps.import.file.name)
 
 cat("\n")
@@ -106,12 +112,10 @@ cat("**********************************************\n")
 cat("**********************************************\n")
 cat("\n")
 
-cat("Loading project-specific import file: '", ps.import.file, "'...", sep="")
 if ( file.exists(ps.import.file) ) {
-  cat("done\n")
   source(ps.import.file)
 } else {
-  stop("file not found!\n")
+  stop("Project-specific import file '", ps.import.file, "' not found!\n")
 }
 
 ######################################

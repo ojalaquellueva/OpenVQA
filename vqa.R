@@ -280,8 +280,11 @@ opt_src_path <- normalizePath(this_script_dir, mustWork = TRUE)
 opt_app_path <- dirname(opt_src_path)
 
 if (!quiet) {
+  cat("Project: ", opt_project, "\n", sep="")
+  cat("Assessment: ", opt_assess, "\n", sep="")
   cat("Application directory: ", opt_app_path, "\n", sep="")
   cat("Source code directory: ", opt_src_path, "\n", sep="")
+  cat("Project directory: ")
 }
 
 # ----------------------------------------------------------
@@ -296,12 +299,12 @@ if (!quiet) {
 # ----------------------------------------------------------
 
 opt_project_path <- file.path(opt_app_path, "projects", opt_project)
-if (!quiet) {
-  cat("Checking for project directory: ", opt_project_path, "...", sep="")
-}
 
 if (!dir.exists(opt_project_path)) {
-  if (!quiet) cat("not found!\n")
+  if (!quiet) {
+    cat ("directory '", opt_project_path, "'   not found!\n")
+    cat("Project directory: ")
+  }
   
   # Check alternate path
   opt_project_path <- file.path(opt_src_path, "projects", opt_project)
@@ -310,15 +313,8 @@ if (!dir.exists(opt_project_path)) {
   }
   
   if (!dir.exists(opt_project_path)) {
-    # stop(
-    #   sprintf(
-    #     "Project directory for project '%s' not found.",
-    #     opt_project
-    #   ),
-    #   call. = FALSE
-    # )
     if (!quiet) {
-      cat ("not found!\n")
+      cat ("alt project directory '", opt_project_path, "'   not found!\n")
       cat("Operation aborted\n")
       quit(save = "no", status = 1) 
     }
@@ -330,12 +326,11 @@ if (!dir.exists(opt_project_path)) {
 opt_data_base_path <- file.path(opt_project_path, "data")
 
 # ----------------------------------------------------------
-# Echo project & project directory
+# Echo final project directory
 # ----------------------------------------------------------
 
 if (!quiet) {
-  cat("Project: ", opt_project, "\n", sep="")
-  cat("Project directory: ", opt_project_path, "\n", sep="")
+  cat("", opt_project_path, "\n", sep="") # Concludes previous echo "Project directory: "
   cat("Project data directory: ", opt_data_base_path, "\n", sep="")
 }
 
@@ -361,11 +356,10 @@ if (!dir.exists(opt_assess_path)) {
 }
 
 # ----------------------------------------------------------
-# Echo assessment & assessment data directory
+# Echo assessment data directory
 # ----------------------------------------------------------
 
 if (!quiet) {
-  cat("Assessment: ", opt_assess, "\n", sep="")
   cat("Assessment data directory: ", opt_assess_path, "\n", sep="")
 }
 

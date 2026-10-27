@@ -90,9 +90,6 @@ if (exists("BM.VEG.TRANSFORM")) {
 # General startup message
 ######################################
 MSG.CONF.START <- ""
-#MSG.CONF.START <- paste0( MSG.CONF.START, "  Base directory: ", BASEDIR, "\n" )
-MSG.CONF.START <- paste0( MSG.CONF.START, "  Data location relative to src/: ", LOC_DATA_DIR, "\n" )
-MSG.CONF.START <- paste0( MSG.CONF.START, "  Project-specific script location relative to src/: ", LOC_PSFILES_DIR, "\n" )
 MSG.CONF.START <- paste0( MSG.CONF.START, "  Data directory: ", DATA_BASEDIR, "\n" )
 
 # Initialize job-specific messages

@@ -1624,11 +1624,13 @@ if ( exists("PARAMS.USE.ASSESS") ) {
 params.proj.file <- paste0( BASEDIR_PSFILES, "params/", params.proj.filename )
 
 # Load project-specific parameters file if exists
+cat("Project-specific parameters file '", params.proj.filename, "'...", sep="")
 if ( file.exists(params.proj.file) ) {
+  cat("done\n\n")
   source(params.proj.file)
 } else {
   # Warn file doesn't exist & continue, using default parameters
-  cat("\nWARNING: project-specific parameters file '", params.proj.file, "' not found!\n\n", sep="")
+  cat("WARNING: file not found! Continuing with default parameters only.\n")
 }
 
 #####################################
