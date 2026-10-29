@@ -2,6 +2,14 @@
 ##################################################
 # Project & assessment parameters
 #
+# *************************************************************
+# IMPORTANT NOTE: Parameters set by this file are used ONLY if
+# running a VQA script directly ("interactively") from inside
+# the R console window. If running from the command line in
+# a terminal emulator, the parameters are supplied as command line
+# arguments that override any parameters set in this file.
+# *************************************************************
+# 
 # First file loaded for all VQA operations. 
 # Parameters in this file determine which set of 
 # project- and assessment-specific parameters
@@ -38,6 +46,15 @@
 #   for separating PROJ & ASSESS in file names.
 ##################################################
 ##################################################
+
+# Project directory location
+# All project-specific code and data are in project directory.
+# Default location is "in" to allow VQA demos to run.
+# We recommend moving all project scripts and data to "out"
+# Values: 
+#   in: inside VQA source code directory (vqa/openvqa/projects)
+#   out: outside source code directory (vqa/projects) 
+LOC_PROJ_DIR <- "out"
 
 ##################################################
 ##################################################
@@ -138,5 +155,8 @@ rm(PROJ, ASSESS)
 # **** Paste PROJ & ASSESS below ****
 # ***********************************
 
+# Project baseline assessment
+PROJ <- "vqa-demo2"
+ASSESS <- 'project_current'
 
 

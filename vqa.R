@@ -23,25 +23,17 @@ if (!requireNamespace("optparse", quietly = TRUE)) {
 library(optparse)
 
 # ===============================================
+# Functions
+# ===============================================
+
+source("includes/functions.R")
+
+# ===============================================
 # Default parameters
 # ===============================================
 
 # Application name for interactive display
 app_name <- "Vegetation Quality Assessment"
-
-# ===============================================
-# Utility functions
-# ===============================================
-
-# Append forward slash to end of file path, including  
-# Windows systems. 
-normalize_dir <- function(path) {
-  norm_path <- normalizePath(path, winslash = "/", mustWork = FALSE)
-  if (!endsWith(norm_path, "/")) {
-    norm_path <- paste0(norm_path, "/")
-  }
-  return(norm_path)
-}
 
 # ============================================================
 # Define command-line argument specifications
@@ -323,7 +315,7 @@ if (!dir.exists(opt_project_path)) {
 }
 
 # Set project data base directory relative to project directory
-opt_data_base_path <- file.path(opt_project_path, "data")
+opt_data_base_path <- file.path(opt_project_path, "data", opt_project)
 
 # ----------------------------------------------------------
 # Echo final project directory
@@ -343,7 +335,8 @@ if (!quiet) {
 #    * Even if only 1 project, you must use this structure
 # ----------------------------------------------------------
 
-opt_assess_path <- file.path(opt_data_base_path, opt_project, opt_assess)
+#opt_assess_path <- file.path(opt_data_base_path, opt_project, opt_assess)
+opt_assess_path <- file.path(opt_data_base_path, opt_assess)
 
 if (!dir.exists(opt_assess_path)) {
   stop(

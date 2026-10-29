@@ -22,8 +22,6 @@ op_name <- "Import & normalize raw data"
 # Set paths, load functions & parameters
 #########################################
 
-#rm(list=ls())
-
 if(!exists("params.loaded", mode="function")) {
   # Set working directory (base application directory)
   # Must set first to set remaining directory parameters
@@ -65,7 +63,7 @@ cat(rep("-", nchar(op_name)), "\n", sep="")
 cat(op_name, "\n", sep="")
 cat(rep("-", nchar(op_name)), "\n", sep="")
 cat(paste0("Import raw data for project '", PROJ, "', assessment '", ASSESS, "' using the following settings: \n", sep=""))
-cat("Project-specific import file: '", ps.import.file.name, "'\n", sep="")
+cat("  Project-specific import file: '", ps.import.file.name, "'\n", sep="")
 cat(paste0(MSG.CONF.START, MSG.CONF.IMP))
 
 if (interactive()==FALSE) {

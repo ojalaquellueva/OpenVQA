@@ -1,4 +1,6 @@
 #######################################################
+#######################################################
+#######################################################
 # Default VQA parameters
 #
 # Important! Read this:
@@ -15,6 +17,8 @@
 #
 # Version: 2024-02-16
 # Author: Brad Boyle (brad@hg-llc.com)
+#######################################################
+#######################################################
 #######################################################
 
 #####################################
@@ -39,7 +43,7 @@ stop_quietly <- function(exit.msg=NULL) {
 #####################################
 
 # Don't change these
-SRCDIR <- paste0(wd, "/")  # Source code base directory
+SRCDIR <- paste0(wd, "/")  # Source code base directory (the one this script is in)
 BASEDIR <- paste0( dirname(SRCDIR), "/" )  # Application base directory
 
 # Location of project-specific scripts directory (PSSD)
@@ -51,56 +55,17 @@ BASEDIR <- paste0( dirname(SRCDIR), "/" )  # Application base directory
 # Project-specific scripts include the following:
 # 1. Directory params and everything in it
 # 2. Directory imports/ and everything in it
-# 3. Script params.pa.R
-# Project-specific scripts directory name set below
-LOC_PSFILES_DIR <- "out"
+# 3. Data (raw, inputs and outputs)
+LOC_PROJ_DIR <- "in"
 
-# Location of data directory 
-# relative to VQA code directory (repo)
-# I.e., is it IN or OUT of repo?
-# Values: out|in|pssd
-#  in: for public demo data only
-#  out: outside VQA repo, at same level
-#  pssd: inside the PSSD (see above)
-LOC_DATA_DIR <- "pssd"
-LOC_DATA_DIR <- "in"
-
-# Project-specific scripts directory (PSSD) name
-# Default: "src_conf/"
-# Recommended: whatever you want!
-# You can maintain multiple PSSDs if you wish, adjusting
-# the value of this parameter as needed.
-# Recommended naming convention:
-# `src_conf_<PROJ>` or `src_conf_<CLIENT_CODE>`
-# Used only if LOC_PSFILES_DIR=="out"
-# Locate inside application base application, one level
-# above the main VQA code directory (repository)
-# Include trailing forward slash "/"
-# SRCDIR_CONF <- "src_conf/"  # Default
-SRCDIR_CONF <- "vqa_conf_tap/"
-SRCDIR_CONF <- "src_conf_demo/"
-
-# Apply the above options
-if (LOC_PSFILES_DIR=="out") {
-  # PSSD is *outside* SRCDIR
-  BASEDIR_PSFILES <- paste0( BASEDIR, SRCDIR_CONF )
-} else {
-  # PSSD is *inside* SRCDIR
-  BASEDIR_PSFILES <- SRCDIR
-}
-if (LOC_DATA_DIR=="out") {
-  # Data are *outside* main VQA SRCDIR
-  DATA_BASEDIR_FINAL <- paste0( BASEDIR, "data/" )
-} else if (LOC_DATA_DIR=="pssd") {
-  # Data are in PSSD, wherever it is
-  DATA_BASEDIR_FINAL <- paste0( BASEDIR_PSFILES, "data/" )
-} else {
-  # Data are inside main VQA SRCDIR (generally only for demo data)
-  DATA_BASEDIR_FINAL <- paste0( SRCDIR, "data/" ) 
-}
+# Is raw data directory shared (in project data directory) or 
+# for this assessment only (in assessment data directory)?
+RAWDATADIR_SHARED <- TRUE
 
 #####################################
+#####################################
 # Startup
+#####################################
 #####################################
 
 #rm(list=ls())	# Clear memory
@@ -119,20 +84,43 @@ wd
 params.loaded <- function() {}
 global.params.loaded<-""
 
-# Load separate parameter file specifying 
-# project and assessment to be analyzed.
-# CRITICAL: many file paths and other parameters
-# depend on these two parameters
-params.pa.file <- paste0(BASEDIR_PSFILES, "params.pa.R")
+###############################################
+# Get project & assessment parameters
+#
+# Over-ridden by command-line arguments if running
+# VQA using vqa.R
+###############################################
+
+params.pa.file <- paste0(SRCDIR, "params.pa.R")
 source(params.pa.file)
 
-# Check if this script has been called from command line
-# by controller script. If so, over-ride starting parameters
-# with command line options. The parameters below are required 
-# by vqa.R so are guaranteed to have been set
+# Set the project directory 
+# NOTE: These may be reset by (1) params.pa.R, 
+# or (2) command line parameters from vqa.R, in  
+# that order
+if (LOC_PROJ_DIR=="out") {
+  # Projects directory is outside SRCDIR
+  BASEDIR_PSFILES <- normalize_dir(file.path(sub("/+$", "", BASEDIR), "projects", PROJ))
+} else {
+  # Projects directory is inside SRCDIR
+  BASEDIR_PSFILES <- normalize_dir(file.path(sub("/+$", "", SRCDIR), "projects", PROJ))
+}
+DATA_BASEDIR_PROJ <- normalize_dir(file.path(sub("/+$", "", BASEDIR_PSFILES), "data", PROJ))
 
+###############################################
+# Get vqa.R command-line parameters, if any
+#
+# Command line parameters supplied by running 
+# vqa.R will over-ride any parameters set in 
+# params.pa.R
+###############################################
+
+# Check if this script was called from command line.
 isset_mode <- FALSE # see below
 
+# If so, over-ride starting parameters with command 
+# line options. The parameters below are required 
+# by vqa.R so are guaranteed to have been set
 if (exists("opt_mode") && !is.null(opt_mode) &&
     length(opt_mode) == 1 && !is.na(opt_mode) &&
     nzchar(opt_mode)) {
@@ -146,14 +134,14 @@ if (exists("opt_mode") && !is.null(opt_mode) &&
   
   # Base paths
   # Add trailing slashes expected by remainder of code
-  SRCDIR <- normalize_dir( opt_src_path )
-  BASEDIR <- normalize_dir( opt_app_path )
-  BASEDIR_PSFILES <- normalize_dir( opt_project_path )
-  DATA_BASEDIR_FINAL <- normalize_dir( opt_data_base_path )
+  BASEDIR <- normalize_dir( opt_app_path )  # VQA application base directory path
+  SRCDIR <- normalize_dir( opt_src_path )   # VQA source code ase directory path
+  BASEDIR_PSFILES <- normalize_dir( opt_project_path ) # Project directory path
+  DATA_BASEDIR_PROJ <- normalize_dir( opt_data_base_path )  # Project data base path
   
-  # Set these to n/a to avoid confusion
-  LOC_PSFILES_DIR <- "n/a"
-  LOC_DATA_DIR <- "n/a"
+  # # Set these to n/a to avoid confusion
+  # LOC_PSFILES_DIR <- "n/a"
+  # LOC_DATA_DIR <- "n/a"
 }
 
 # Throw intelligible error if PROJ or ASSESS not properly set
@@ -192,20 +180,19 @@ LIB.LOAD.SILENT <- TRUE
 # DATADIR_REL_PROJ <- paste0( "data/", PROJ, "/" )
 # DATADIR_REL_ASSESS <- paste0( DATADIR_REL_PROJ, ASSESS, "/" )
 
-# Project base data directory
-# This is used mostly by qh.net.R to build qh.net input directory paths
-DATA_BASEDIR_PROJ <- paste0( DATA_BASEDIR_FINAL, PROJ, "/" )
-
-# Main data base directory (= assessment data directory)
-# In general, everthing live here
-DATA_BASEDIR <- paste0( DATA_BASEDIR_PROJ, ASSESS, "/" )  
-if (isset_mode) DATA_BASEDIR <- normalize_dir( opt_assess_path )  # Use command line value
+# Assessment data base directory
+DATA_BASEDIR <- normalize_dir( paste0(DATA_BASEDIR_PROJ, ASSESS) )  
+if (isset_mode) DATA_BASEDIR <- normalize_dir( opt_assess_path )  # reset to command line option
 data_base_dir <- DATA_BASEDIR  # for backward-compatibility (remove if not needed)
 
-# Raw data directory
-# Default: RAWDATADIR <- paste0( DATA_BASEDIR, 'raw/')
-# You can change this to use data stored at different location
-RAWDATADIR <- paste0( DATA_BASEDIR, 'raw/')
+# Raw data directory location
+if (RAWDATADIR_SHARED) {
+  # In project data directory
+  RAWDATADIR <- normalize_dir(paste0( DATA_BASEDIR_PROJ, 'raw'))
+} else {
+  # In assessment data directory
+  RAWDATADIR <- normalize_dir(paste0( DATA_BASEDIR, 'raw'))
+}
 
 # these directories are relative to working directory (wd) of parent file
 INPUTDIR <- paste0(DATA_BASEDIR, "inputs/")		# Standaridized input files 
@@ -215,7 +202,7 @@ FIGDIR <- paste0(DATA_BASEDIR, "figs/")		# figures directory
 FIGDIR_REL <- paste0( "data/", PROJ, "/", ASSESS, "/figs/")
 figs.dir <- FIGDIR			# For compatibility with legacy variable names
 figdir.abs <- paste(wd, figs.dir, sep='/')
-LOGDIR <- paste0(DATA_BASEDIR, "log/")		# log file directory
+LOGDIR <- normalize_dir(paste0(DATA_BASEDIR, "log"))	# log file directory
 
 # Create data directories if not exist
 dir.create(file.path(INPUTDIR), showWarnings = FALSE)
@@ -1642,3 +1629,6 @@ if ( file.exists(params.proj.file) ) {
 source( paste0( SRCDIR, "params.conf.general.R") )
 
 
+
+
+cat("\n\nRAWDATADIR: '", RAWDATADIR, "'\n\n")

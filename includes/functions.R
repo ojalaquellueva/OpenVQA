@@ -6592,4 +6592,14 @@ getwd_abs <- function() {
   return(normalizePath(getwd(), winslash = "/"))
 }
 
+# Append forward slash to end of file path
+normalize_dir <- function(path) {
+  norm_path <- normalizePath(path, winslash = "/", mustWork = FALSE)
+  if (!endsWith(norm_path, "/")) {
+    norm_path <- paste0(norm_path, "/")
+  }
+  return(norm_path)
+}
+
+
 
