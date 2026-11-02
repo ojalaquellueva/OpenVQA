@@ -1,27 +1,34 @@
-##################################################
-##################################################
+###############################################################
+###############################################################
+###############################################################
 # Project & assessment parameters
 #
+# Parameters in this file determine which project- and 
+# assessment-specific parameters are loaded and where the 
+# data are loaded and saved. Check carefully!
+#
 # *************************************************************
-# IMPORTANT NOTE: Parameters set by this file are used ONLY if
-# running a VQA script directly ("interactively") from inside
-# the R console window. If running from the command line in
-# a terminal emulator, the parameters are supplied as command line
-# arguments that override any parameters set in this file.
+# IMPORTANT NOTE: 
+#
+# This parameter file is required *only* if you are running VQA 
+# interactively by pasting code into the R GUI or RStudio console 
+# window.  
+#
+# If you are running VQA from the command line (in a terminal  
+# emulator such as the Mac OS Terminal app or the RStudio terminal 
+# tab), parameters PROJ and ASSESS are supplied as command line 
+# arguments to command `vqa.R`(or `Rscript vqa.R`). The application
+# will still look for this file--so don't delete it!—-but the 
+# values supplied by params.pa.R will be ignored.
 # *************************************************************
 # 
-# First file loaded for all VQA operations. 
-# Parameters in this file determine which set of 
-# project- and assessment-specific parameters
-# is loaded and which data input/output folder
-# is used. Check carefully!
-#
 # Parameter definitions:
 # PROJ: Short code of project
 # * Must match project data directory name: "data/<PROJ>/"
 # ASSESS: Assessment code
 # * Must match assessment data dir name: "data/<PROJ>/<ASSESS>/"
-# PARAMS.USE.ASSESS: Use assessment-specific params file? (TRUE|FALSE*)
+# PARAMS.USE.ASSESS: Use assessment-specific params file? 
+# Values: TRUE|FALSE
 # * TRUE:
 #   * MUST include assessment code in name of project-specific params file
 #   * Name format: params.<PROJ>.<ASSESS>.R
@@ -29,7 +36,8 @@
 # * FALSE: 
 #   * All assessments use same project parameter file
 # * Default is FALSE; include this parameter only if TRUE
-# IMPORT.USE.ASSESS: Use assessment-specific import script? (TRUE|FALSE)
+# IMPORT.USE.ASSESS: Use assessment-specific import script? 
+# Values: TRUE|FALSE
 # * TRUE:
 #   * MUST include assessment code in name of project-specific import script
 #   * Name format: import.<PROJ>.<ASSESS>.R
@@ -44,9 +52,12 @@
 # * No punctuation except for "-" and "_"
 # * No periods (.) in PROJ or ASSESS. Periods are reserved
 #   for separating PROJ & ASSESS in file names.
-##################################################
-##################################################
+###############################################################
+###############################################################
+###############################################################
 
+##################################################
+##################################################
 # Project directory location
 # All project-specific code and data are in project directory.
 # Default location is "in" to allow VQA demos to run.
@@ -54,7 +65,11 @@
 # Values: 
 #   in: inside VQA source code directory (vqa/openvqa/projects)
 #   out: outside source code directory (vqa/projects) 
+
 LOC_PROJ_DIR <- "out"
+
+##################################################
+##################################################
 
 ##################################################
 ##################################################
@@ -133,30 +148,29 @@ PROJ <- "vqa-demo2"
 ASSESS <- 'offset_current'
 
 ##################################################
+# Reset to default values to avoid accidental 
+# used of saved values above
+# DO NOT DELETE, CHANGE OR MOVE THIS SECTION!
+##################################################
+
+PARAMS.USE.ASSESS <- FALSE
+IMPORT.USE.ASSESS <- FALSE
+rm(PROJ, ASSESS)
+
+##################################################
 ##################################################
 # Project & assessment to run
 #
-# Copy the project to run from 'Saved 
-# parameters' and paste below at bottom
+# Copy the project to run from 'Saved parameters' 
+# and paste below
 ##################################################
 ##################################################
-
-# Reset to default values of PARAMS.USE.ASSESS and IMPORT.USE.ASSES
-# DO NOT DELETE, CHANGE OR MOVE!
-PARAMS.USE.ASSESS <- FALSE
-IMPORT.USE.ASSESS <- FALSE
-
-# Unset PROJ & ASSESS to throw error instead of 
-# accidentally reusing last saved values
-# DO NOT DELETE, CHANGE OR MOVE!
-rm(PROJ, ASSESS)
 
 # ***********************************
 # **** Paste PROJ & ASSESS below ****
 # ***********************************
 
-# Project baseline assessment
-PROJ <- "vqa-demo2"
-ASSESS <- 'project_current'
+PROJ <- "vqa-demo1"
+ASSESS <- 'main_001_current'
 
 

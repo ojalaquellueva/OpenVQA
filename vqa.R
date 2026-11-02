@@ -293,24 +293,23 @@ if (!quiet) {
 opt_project_path <- file.path(opt_app_path, "projects", opt_project)
 
 if (!dir.exists(opt_project_path)) {
-  if (!quiet) {
-    cat ("directory '", opt_project_path, "'   not found!\n")
-    cat("Project directory: ")
-  }
+  if (!quiet) cat (opt_project_path, "...not found!\n", sep="")
   
   # Check alternate path
   opt_project_path <- file.path(opt_src_path, "projects", opt_project)
-  if (!quiet) {
-    cat("Checking for project directory: ", opt_project_path, "...", sep="")
-  }
+  if (!quiet) cat("Trying alt directory ", opt_project_path, "...", sep="")
   
   if (!dir.exists(opt_project_path)) {
     if (!quiet) {
-      cat ("alt project directory '", opt_project_path, "'   not found!\n")
+      cat (" not found!\n", sep="")
       cat("Operation aborted\n")
       quit(save = "no", status = 1) 
     }
-    
+  } else  {
+    if (!quiet) {
+      cat("found!\n")
+      cat("Project directory: ")
+    }
   }
 }
 
@@ -322,7 +321,7 @@ opt_data_base_path <- file.path(opt_project_path, "data", opt_project)
 # ----------------------------------------------------------
 
 if (!quiet) {
-  cat("", opt_project_path, "\n", sep="") # Concludes previous echo "Project directory: "
+  cat(opt_project_path, "\n", sep="") # Concludes previous echo "Project directory: "
   cat("Project data directory: ", opt_data_base_path, "\n", sep="")
 }
 

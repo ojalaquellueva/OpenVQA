@@ -74,12 +74,11 @@ Rscript --mode import --project vqa-demo2 --assess project_baseline
 Rscript vqa.R --mode vqa.batch --project vqa-demo2 --assess project_baseline 
 ```
 
-
-### 3. Run Net Quality Hectares calculation
+### 3. Calculate Net Quality Hectares calculation
 * Complete all VQA analyses for all assessments before running net quality hectares, as qh.net requires VQA results from multiple VQA assessments as inputs).
 
 ```
-Rscript vqa.R --mode vqa.batch --project vqa-demo2 --assess main_001_current 
+Rscript vqa.R --mode qh.net --project vqa-demo2 --assess main_001_current 
 ```
 
 ##### To include the offset in the QH.net analysis of the project site:

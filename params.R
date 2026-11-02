@@ -21,10 +21,38 @@
 #######################################################
 #######################################################
 
-#####################################
-# Functions needed before loading 
-# functions file
-#####################################
+##################################################
+##################################################
+# Initial setup
+##################################################
+##################################################
+
+# Set working directory (base application directory)
+wd<-getwd()
+setwd(wd)
+wd
+
+# Dummy parameter & function used to detect if parameters
+# already loaded. Keep both versions for backwards-
+# compatibility (for now). Do not delete!
+params.loaded <- function() {}
+global.params.loaded<-""
+
+#######################################################
+# Load libraries silently (TRUE|FALSE)
+#
+# Affects how packages are loaded at the end of this 
+# script. Can be over-ridden in project-specific 
+# parameters file, which is sourced before libraries 
+# are loaded. Will suppress display of "masking" 
+# warnings (namespace conflicts).
+#######################################################
+
+LIB.LOAD.SILENT <- TRUE
+
+#######################################################
+# Functions needed before loading general functions
+#######################################################
 
 stop_quietly <- function(exit.msg=NULL) {
   opt <- options(show.error.messages = FALSE)
@@ -38,131 +66,169 @@ stop_quietly <- function(exit.msg=NULL) {
   }
 }
 
-#####################################
-# Set base directories
-#####################################
+##################################################
+##################################################
+# BASE DIRECTORIES
+##################################################
+##################################################
 
-# Don't change these
+##################################################
+# Project directory relative location
+#
+# All project-specific parameters, code and data 
+# live in directory "projects/". The default location 
+# for "projects/" is immediately inside the VQA source  
+# code repository ("in"). This location
+# allows the built-in VQA demos to run "out of the box"
+# when VQA is installed. However, we recommend moving 
+# all projects one level up, just below the application 
+# base directory but outside (at the same level as)
+# the VQA repository ("out").
+#
+# Values: in/out
+#   in: inside VQA source code directory (PROJECTS_DIR_IN)
+#   out: outside source code directory (PROJECTS_DIR_OUT) 
+#
+# Note: This setting applies only if running 
+# individual VQA scripts interactively in the R GUI 
+# or RStudio console. If running VQA from a terminal
+# window using command `vqa.R` or `Rscript vqa.R`,
+# parameter LOC_PROJ_DIR is ignored. Instead, vqa.R
+# automatically uses location PROJECTS_DIR_OUT, switching
+# to PROJECTS_DIR_IN only if it cannot locate directory
+# PROJ/ at the first location.
+##################################################
+  
+LOC_PROJ_DIR <- "in"
+
+#######################################################
+# Application and source code base directories
+#######################################################
+
+# These don't change
 SRCDIR <- paste0(wd, "/")  # Source code base directory (the one this script is in)
 BASEDIR <- paste0( dirname(SRCDIR), "/" )  # Application base directory
 
-# Location of project-specific scripts directory (PSSD)
-# relative to VQA code directory (repo)
-# I.e., are they IN or OUT of repo?
-# Values: out|in
-# Default: "in" (for public demo scripts only)
-# Recommended: "out" (keeps private/custom code out of VQA repo)
-# Project-specific scripts include the following:
-# 1. Directory params and everything in it
-# 2. Directory imports/ and everything in it
-# 3. Data (raw, inputs and outputs)
-LOC_PROJ_DIR <- "in"
+#######################################################
+# Candidate master projects directory locations
+#######################################################
 
-# Is raw data directory shared (in project data directory) or 
-# for this assessment only (in assessment data directory)?
+PROJECTS_DIR_OUT <- normalize_dir(file.path(sub("/+$", "", BASEDIR), "projects"))
+PROJECTS_DIR_IN <- normalize_dir(file.path(sub("/+$", "", SRCDIR), "projects"))
+
+
+
+cat("\n")
+cat("BASEDIR: '", BASEDIR, "'\n", sep="")
+cat("SRCDIR: '", SRCDIR, "'\n", sep="")
+cat("PROJECTS_DIR_OUT: '", PROJECTS_DIR_OUT, "'\n", sep="")
+cat("PROJECTS_DIR_IN: '", PROJECTS_DIR_IN, "'\n", sep="")
+cat("\n")
+
+
+
+#######################################################
+# Raw data directory shared?
+# Values:
+#   TRUE: Shared. In project data directory, at same 
+#     level as assesment directories
+#   FALSE: Not shared. Inside single assessment data and
+#     used by that assessment only.
+#######################################################
+
 RAWDATADIR_SHARED <- TRUE
 
-#####################################
-#####################################
-# Startup
-#####################################
-#####################################
-
-#rm(list=ls())	# Clear memory
-
-# Set working directory (base application directory)
-wd<-getwd()
-setwd(wd)
-wd
-
-# # Initialize flow control parameter job
-# job=""
-# 
-# Dummy parameter & function used to detect if parameters
-# already loaded. Keep both versions for backwards-
-# compatibility (for now). Do not delete!
-params.loaded <- function() {}
-global.params.loaded<-""
-
-###############################################
-# Get project & assessment parameters
+#######################################################
+# Project & assessment parameters from params.pa.R file
 #
-# Over-ridden by command-line arguments if running
-# VQA using vqa.R
-###############################################
+# Sets only PROJ, ASSESS and LOC_PROJ_DIR. Do not 
+# confuse with project-specific parameters file loaded 
+# near the end of this script. 
+# Values set here may be overridden by command line 
+# options from vqa.R, if applicable. 
+#######################################################
 
-params.pa.file <- paste0(SRCDIR, "params.pa.R")
+#######################################################
+# Set project directory and project data directory
+# based on value of LOC_PROJ_DIR supplied by params.pa.R.
+# May be overridden by (1) project-specific 
+# parameters file, or (2) command line parameters  
+# from vqa.R, in that order.
+#######################################################
+
+# Set the project master directory
+if (LOC_PROJ_DIR=="out") {
+  PROJECTS_DIR <- PROJECTS_DIR_OUT
+} else {
+  # LOC_PROJ_DIR=="in"
+  PROJECTS_DIR <- PROJECTS_DIR_IN
+}
+
+# Load project & assessment (params.pa) file
+params.pa.file <- paste0(PROJECTS_DIR, "params.pa.R")
 source(params.pa.file)
 
-# Set the project directory 
-# NOTE: These may be reset by (1) params.pa.R, 
-# or (2) command line parameters from vqa.R, in  
-# that order
-if (LOC_PROJ_DIR=="out") {
-  # Projects directory is outside SRCDIR
-  BASEDIR_PSFILES <- normalize_dir(file.path(sub("/+$", "", BASEDIR), "projects", PROJ))
-} else {
-  # Projects directory is inside SRCDIR
-  BASEDIR_PSFILES <- normalize_dir(file.path(sub("/+$", "", SRCDIR), "projects", PROJ))
-}
+# Set the current project base directory
+BASEDIR_PSFILES <- normalize_dir(file.path(sub("/+$", "", PROJECTS_DIR), PROJ))
+  
+# Set the current project data base directory
 DATA_BASEDIR_PROJ <- normalize_dir(file.path(sub("/+$", "", BASEDIR_PSFILES), "data", PROJ))
 
+
+
+
+cat("\n")
+cat("params.pa.file: '", params.pa.file, "'\n", sep="")
+cat("BASEDIR_PSFILES: '", BASEDIR_PSFILES, "'\n", sep="")
+cat("DATA_BASEDIR_PROJ: '", DATA_BASEDIR_PROJ, "'\n", sep="")
+cat("\n")
+
+
 ###############################################
-# Get vqa.R command-line parameters, if any
+# Get vqa.R command-line parameters, if applicable
 #
-# Command line parameters supplied by running 
-# vqa.R will over-ride any parameters set in 
-# params.pa.R
+# Command line parameters from vqa.R will 
+# override any settings supplied by params.pa.R
 ###############################################
 
-# Check if this script was called from command line.
-isset_mode <- FALSE # see below
-
+# Check if this script was called by vqa.R.
 # If so, over-ride starting parameters with command 
 # line options. The parameters below are required 
-# by vqa.R so are guaranteed to have been set
+# by vqa.R so are guaranteed to have been set if 
+# vqa.R was run.
+isset_mode <- FALSE # Initialize vqa.R detection flag
+
 if (exists("opt_mode") && !is.null(opt_mode) &&
     length(opt_mode) == 1 && !is.na(opt_mode) &&
     nzchar(opt_mode)) {
   
-  # Set this to simplify the above tests
+  # Set isset_mode so don't have to rerun preceding tests
   isset_mode <- TRUE
     
-  # Project and assessment
+  # Get project and assessment
   PROJ <- opt_project
   ASSESS <- opt_assess
   
-  # Base paths
-  # Add trailing slashes expected by remainder of code
+  # Get base paths
+  # normalize_dir() adds trailing slashes expected by most of code
   BASEDIR <- normalize_dir( opt_app_path )  # VQA application base directory path
   SRCDIR <- normalize_dir( opt_src_path )   # VQA source code ase directory path
   BASEDIR_PSFILES <- normalize_dir( opt_project_path ) # Project directory path
   DATA_BASEDIR_PROJ <- normalize_dir( opt_data_base_path )  # Project data base path
-  
-  # # Set these to n/a to avoid confusion
-  # LOC_PSFILES_DIR <- "n/a"
-  # LOC_DATA_DIR <- "n/a"
 }
 
 # Throw intelligible error if PROJ or ASSESS not properly set
+msg.err <- FALSE
+
 if ( !all(sapply(c("PROJ", "ASSESS"), exists)) ) {
   msg.err <- "ERROR: One or both parameters PROJ and ASSESS are undefined!\n"
-  msg.err <- paste0( msg.err, "Please set both in 'params.pa.R' before proceeding.\n")
-  stop_quietly(msg.err)
 } else if ( any(sapply(list(PROJ, ASSESS), function(x) is.null(x) || x == "")) ) {
   msg.err <- "ERROR: One or both parameters PROJ and ASSESS are empty or null!\n"
+}
+if (!msg.err==FALSE) {
   msg.err <- paste0( msg.err, "Please set both in 'params.pa.R' before proceeding.\n")
   stop_quietly(msg.err)
 }
-
-# Load libraries silently (TRUE|FALSE)
-# Affects how packages are loaded at the 
-# end of this script. Can be over-ridden  
-# in project-specific parameters file, which
-# is sourced before libraries are loaded
-# Will suppress display of namespace 
-# conflicts ("masking"). 
-LIB.LOAD.SILENT <- TRUE
 
 ######################################
 ######################################
@@ -222,7 +288,7 @@ INCLUDESDIR <- paste0(SRCDIR, "includes/")
 #####################################
 # Raw data file names
 #
-# * All files should be in RAWDATADIR
+# * All files should be in RAWDATADIR (set later in params file)
 # * If files are further buried in subdirectories, be
 #   sure to include the path to the file relative to 
 #   RAWDATADIR
@@ -261,12 +327,14 @@ RAW_SPP_FILENAME <- "my_reference_species_list_file"
 # IMPORTANT: Declare *before* parameter function ei.params()
 DATA.TYPE <- "cover"
 
-# Absolute minimum number of focal and benchmark plots 
-# per land cover class required for VQA to run. Does NOT
+# Absolute minimum number of focal (n.f) and benchmark (n.b)  
+# plots per land cover class required for VQA to run. Does NOT
 # guarantee adequate power! If DELETE.PLOTS.BELOW.N.MIN=TRUE,
 # all plot & vegetation data for this land cover class will 
-# be deleted from final df and saved input files. 
-# Recommend N.MIN.ABS=6
+# be removed from final data frames and prepared input files. 
+# Recommend N.MIN.ABS=6, but VQA will sometimes run without
+# crashing with sample sizes as low as n=3. 
+# Both n.f and n.b must be >=N.MIN.ABS.
 N.MIN.ABS <- 6
 
 # Remove all focal plots linked to land cover with
@@ -1620,6 +1688,17 @@ if ( file.exists(params.proj.file) ) {
   cat("WARNING: file not found! Continuing with default parameters only.\n")
 }
 
+
+
+
+cat("\n")
+cat("BASEDIR_PSFILES: '", BASEDIR_PSFILES, "'\n", sep="")
+cat("params.proj.file: '", params.proj.file, "'\n", sep="")
+cat("\n")
+
+
+
+
 #####################################
 #####################################
 # Load parameter confirmation messages
@@ -1627,8 +1706,3 @@ if ( file.exists(params.proj.file) ) {
 #####################################
 
 source( paste0( SRCDIR, "params.conf.general.R") )
-
-
-
-
-cat("\n\nRAWDATADIR: '", RAWDATADIR, "'\n\n")
