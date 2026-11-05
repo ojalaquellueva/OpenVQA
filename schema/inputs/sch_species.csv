@@ -1,0 +1,7 @@
+﻿column,constraint,err_constraint
+speciesID,any(is.na(species$speciesID) | species$speciesID == ''),One or more values of 'speciesID' are missing
+genus,any(is.na(species$genus) | species$genus == ''),One or more values of 'genus' are missing
+species,any(is.na(species$species) | species$species == ''),One or more values of 'species' are missing
+is_exotic,any(is.na(species$is_exotic) | species$is_exotic == ''),One or more species are missing a value for 'is_exotic'
+is_exotic,"any(!species$is_exotic %in% c(0,1))",Illegal value(s) of is_exotic; must be 0 or 1.
+growthForm,any(is.na(species$growthForm) | species$growthForm == ''),One or more species are missing a value for 'growthForm'

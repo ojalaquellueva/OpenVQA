@@ -21,6 +21,11 @@
 #######################################################
 #######################################################
 
+# Display verbose output (TRUE|FALSE)
+# Detailed values of key parameters and intermediate 
+# variables
+verbose <- FALSE
+
 ##################################################
 ##################################################
 # Initial setup
@@ -99,7 +104,7 @@ stop_quietly <- function(exit.msg=NULL) {
 # PROJ/ at the first location.
 ##################################################
   
-LOC_PROJ_DIR <- "in"
+LOC_PROJ_DIR <- "out"
 
 #######################################################
 # Application and source code base directories
@@ -115,17 +120,6 @@ BASEDIR <- paste0( dirname(SRCDIR), "/" )  # Application base directory
 
 PROJECTS_DIR_OUT <- normalize_dir(file.path(sub("/+$", "", BASEDIR), "projects"))
 PROJECTS_DIR_IN <- normalize_dir(file.path(sub("/+$", "", SRCDIR), "projects"))
-
-
-
-cat("\n")
-cat("BASEDIR: '", BASEDIR, "'\n", sep="")
-cat("SRCDIR: '", SRCDIR, "'\n", sep="")
-cat("PROJECTS_DIR_OUT: '", PROJECTS_DIR_OUT, "'\n", sep="")
-cat("PROJECTS_DIR_IN: '", PROJECTS_DIR_IN, "'\n", sep="")
-cat("\n")
-
-
 
 #######################################################
 # Raw data directory shared?
@@ -156,7 +150,7 @@ RAWDATADIR_SHARED <- TRUE
 # from vqa.R, in that order.
 #######################################################
 
-# Set the project master directory
+# Set the projects/ master directory
 if (LOC_PROJ_DIR=="out") {
   PROJECTS_DIR <- PROJECTS_DIR_OUT
 } else {
@@ -174,15 +168,17 @@ BASEDIR_PSFILES <- normalize_dir(file.path(sub("/+$", "", PROJECTS_DIR), PROJ))
 # Set the current project data base directory
 DATA_BASEDIR_PROJ <- normalize_dir(file.path(sub("/+$", "", BASEDIR_PSFILES), "data", PROJ))
 
-
-
-
-cat("\n")
-cat("params.pa.file: '", params.pa.file, "'\n", sep="")
-cat("BASEDIR_PSFILES: '", BASEDIR_PSFILES, "'\n", sep="")
-cat("DATA_BASEDIR_PROJ: '", DATA_BASEDIR_PROJ, "'\n", sep="")
-cat("\n")
-
+if (verbose) {
+  cat("Before loading project-assessment file:\n", sep="")
+  cat("  Directory 'projects/' location (LOC_PROJ_DIR): '", LOC_PROJ_DIR, "'\n", sep="")
+  cat("  Directory 'projects/' path (PROJECTS_DIR): '", PROJECTS_DIR, "'\n", sep="")
+  cat("  Project-assessment file path: '", params.pa.file, "'\n", sep="")
+  cat("After loading project-assessment file:\n", sep="")
+  cat("  Current project (PROJ): '", PROJ, "'\n", sep="")
+  cat("  Current assessment (ASSESS): '", ASSESS, "'\n", sep="")
+  cat("  Current project base directory (BASEDIR_PSFILES): '", BASEDIR_PSFILES, "'\n", sep="")
+  cat("  Current project data base directory (DATA_BASEDIR_PROJ): '", DATA_BASEDIR_PROJ, "'\n", sep="")
+}
 
 ###############################################
 # Get vqa.R command-line parameters, if applicable
@@ -1675,7 +1671,6 @@ if ( exists("PARAMS.USE.ASSESS") ) {
     params.proj.filename <- paste0("params.", PROJ, ".", ASSESS, ".R")
   }
 }
-#params.proj.file <- paste0( "params/", params.proj.filename )
 params.proj.file <- paste0( BASEDIR_PSFILES, "params/", params.proj.filename )
 
 # Load project-specific parameters file if exists
@@ -1688,16 +1683,11 @@ if ( file.exists(params.proj.file) ) {
   cat("WARNING: file not found! Continuing with default parameters only.\n")
 }
 
-
-
-
-cat("\n")
-cat("BASEDIR_PSFILES: '", BASEDIR_PSFILES, "'\n", sep="")
-cat("params.proj.file: '", params.proj.file, "'\n", sep="")
-cat("\n")
-
-
-
+if (verbose) {
+  cat("After loading Project-specific params file:\n", sep="")
+  cat("  Current project base directory (BASEDIR_PSFILES): '", BASEDIR_PSFILES, "'\n", sep="")
+  cat("  Project-specific params file & path (params.proj.file): '", params.proj.file, "'\n", sep="")
+}
 
 #####################################
 #####################################

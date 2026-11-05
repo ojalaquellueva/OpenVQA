@@ -1,0 +1,13 @@
+﻿column,constraint,err_constraint
+plotCode,any(is.na(coverByGrowthForm$plotCode) | coverByGrowthForm$plotCode == ''),One or more values of 'plotCode' are missing
+plotCode,any(!coverByGrowthForm$plotCode %in% plotMetadata$plotCode ),One or more values of 'plotCode' not in table 'plotMetadata'
+focalOrBenchmark,any(is.na(coverByGrowthForm$focalOrBenchmark)),One or more values of 'focalOrBenchmark' are missing
+focalOrBenchmark,"any(!coverByGrowthForm$focalOrBenchmark %in% c('f','b'))",Illegal value(s) of focalOrBenchmark; must be 'f' or 'b'.
+landCover,any(is.na(coverByGrowthForm$landCover) | coverByGrowthForm$landCover == ''),One or more values of 'landCover' are missing
+landCover,any(!coverByGrowthForm$landCover %in% unique(plotMetadata$landCover) ),One or more values of column landCover not in table plotMetadata
+vegClass,any(is.na(coverByGrowthForm$vegClass) | (coverByGrowthForm$vegClass == '') ),One or more values of 'vegClass' are missing
+vegClass,any(!coverByGrowthForm$vegClass %in% unique(plotMetadata$vegClass) ),One or more values of vegClass not in table plotMetadata
+stratum,,
+cover,any(is.na(coverByGrowthForm$cover) | coverByGrowthForm$cover == ''),One or more values of 'cover' are missing
+cover,!is.numeric(coverByGrowthForm$cover),"Illegal data type, column 'cover' must be numeric"
+cover,any(coverByGrowthForm$cover<0 | coverByGrowthForm$cover>1),Illegal values: column 'cover' must range over [0:1] only

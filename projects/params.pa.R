@@ -58,21 +58,6 @@
 
 ##################################################
 ##################################################
-# Project directory location
-# All project-specific code and data are in project directory.
-# Default location is "in" to allow VQA demos to run.
-# We recommend moving all project scripts and data to "out"
-# Values: 
-#   in: inside VQA source code directory (vqa/openvqa/projects)
-#   out: outside source code directory (vqa/projects) 
-
-LOC_PROJ_DIR <- "out"
-
-##################################################
-##################################################
-
-##################################################
-##################################################
 # Saved parameters
 #
 # This section is for saving sets of project and 

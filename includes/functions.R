@@ -6601,5 +6601,54 @@ normalize_dir <- function(path) {
   return(norm_path)
 }
 
+run_column_validation <- function(target_df, csv_expr_string, error_msg = "Validation failed", 
+  global_lookups = list()) {
+  clean_expr <- trimws(csv_expr_string)
+  
+  # 1. Guard against accidental assignments
+  if (grepl("<-|=(?!=)", clean_expr, perl = TRUE)) {
+    cat(paste("Typo Error:", error_msg, "[Details: Found '=' or '<-' in expression]\n"))
+    return(FALSE)
+  }
+  
+  # 2. Parse the expression
+  parsed_cmd <- tryCatch({
+    parse(text = clean_expr)
+  }, error = function(e) {
+    cat(paste("Syntax Error:", error_msg, "[Details:", e$message, "]\n"))
+    return(NULL)
+  })
+  if (is.null(parsed_cmd) || length(parsed_cmd) > 1) return(FALSE)
+  
+  # 3. Create the Sandboxed Environment
+  # Convert global_lookups list into an environment parented by baseenv
+  lookup_env <- as.environment(global_lookups)
+  parent.env(lookup_env) <- baseenv()
+  
+  # Place the main target dataframe inside the sandbox, parented by the lookups
+  sandbox <- as.environment(target_df)
+  parent.env(sandbox) <- lookup_env
+  
+  # 4. Execute the column logic
+  result <- tryCatch({
+    eval(parsed_cmd, envir = sandbox)
+  }, error = function(e) {
+    cat(paste("Runtime Error:", error_msg, "[Details:", e$message, "]\n"))
+    return(FALSE)
+  })
+  
+  # 5. Handle Vector Results
+  # For structural schema validation, we typically want EVERY value to pass (all == TRUE)
+  if (is.logical(result)) {
+    if (any(is.na(result)) || !all(result)) {
+      cat(paste("Failure:", error_msg, "\n"))
+      return(FALSE)
+    }
+    return(TRUE)
+  } else {
+    cat(paste("Error:", error_msg, "[Details: Rule did not return a logical TRUE/FALSE vector]\n"))
+    return(FALSE)
+  }
+}
 
 

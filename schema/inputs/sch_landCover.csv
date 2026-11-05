@@ -1,0 +1,9 @@
+﻿column,constraint,err_constraint
+vegClass,any(is.na(landCover$vegClass) | landCover$vegClass == ''),One or more values of 'vegClass' are missing
+landCover,any(is.na(landCover$landCover) | landCover$landCover == ''),One or more values of 'landCover' are missing
+lc.type,any(is.na(landCover$lc.type) | landCover$lc.type == ''),One or more values of 'lc.type' are missing
+area_ha,,
+focal_plots,,
+bm_plots,,
+all.n.OK,any( is.na(landCover$all.n.OK) ),One or more values of 'all.n.OK' are NA
+all.n.OK,!is.logical(landCover$all.n.OK),Column all.n.OK not type logical; must be TRUE or FALSE only

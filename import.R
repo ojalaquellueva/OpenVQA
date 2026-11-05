@@ -18,6 +18,7 @@
 # Name of this operation
 op_name <- "Import & normalize raw data"
 
+
 #########################################
 # Set paths, load functions & parameters
 #########################################
@@ -145,7 +146,7 @@ if ( QH.METHOD=="empirical" ) {   # START QH.METHOD=="empirical" #2
   cat("Checking all required input data frames present:\n")
   df.missing <- FALSE
   for (df.input in df.input.list) {
-    cat("  ", df.input, "...", sep="")
+    cat("- ", df.input, "...", sep="")
     if ( exists(df.input) ) {
       cat("done\n")
     } else {
@@ -161,14 +162,112 @@ if ( QH.METHOD=="empirical" ) {   # START QH.METHOD=="empirical" #2
     stop( msg )
   }
   
+  ######################################
+  # Validate schema for each input file
+  ######################################
+  
+  cat("Validating schemas:\n")
+  
+  # Path of schema validation files
+  path_sch_inputs <- normalize_dir(file.path(sub("/+$", "", SRCDIR), "schema/inputs"))
+  
+  for (df.input in df.input.list) {  # BEGIN 
+    curr_df <- get(df.input)
+    cat(paste0("- ", df.input, ": "))
+    f_curr_sch <- paste0(path_sch_inputs, "sch_", df.input, ".csv")
+    
+    if (!file.exists(f_curr_sch)) {
+      cat("WARNING: no schema found for this input data frame\n")
+    } else {
+      cat("\n")
+      curr_sch <- read.csv(f_curr_sch)
+    
+      # Check required columns present
+      cat("-- Checking for required columns...")
+      sch_cols <- na.omit(unique(curr_sch$column))
+      sch_cols <- sch_cols[!(sch_cols %in% c("notes", "Notes", "comments", "Comments"))]
+      curr_df_cols <- unique(names(curr_df))
+      missing_cols <- setdiff(sch_cols, curr_df_cols)
+      
+      if (length(missing_cols>0)) {
+        msg.err <- "ERROR: the following column(s) are missing!\n"
+        msg.err <- paste0(msg.err, "   ", paste(missing_cols, collapse = ", "), "\n")
+        stop_quietly(msg.err)
+      } else {
+        cat("passed\n")
+      }
+      
+      # Apply column-by-column validations
+      cat("-- Validating columns:\n", sep="")
+      sch_rows <- nrow(curr_sch)
+      prev_col <- ""
+      
+      for (i in 1:sch_rows) {
+        curr_col <- trimws(curr_sch$column[i])
+        constraint_str <- trimws(curr_sch$constraint[i])
+        constraint_err <- trimws(curr_sch$err_constraint[i])
+        #cat("curr_col='", curr_col, "', constraint_str='", constraint_str, "'\n", sep="" )
+
+        if ( !(curr_col=="") && !(constraint_str=="") ) {
+          
+          if (i>1 && !curr_col==prev_col) {
+            # Close progress message of previous column
+            # Prevents multiple echos columns with >1 row in schema table (multiple constraints)
+            #cat("passed [prev_col='", prev_col, "', curr_col='", curr_col, "']\n", sep="")
+            cat("passed\n", sep="")
+          }
+          
+          if (!curr_col==prev_col) {
+            # Echo only if starting a new column
+            # Handles columns with >1 row in schema table (multiple constraints)
+            cat("--- '", curr_col, "'...", sep="")
+          }
+
+          # Parse the string without executing it and inspect the token types
+          parse_data <- getParseData(parse(text=constraint_str, keep.source=TRUE))
+          
+          # Check if R classifies any token as LEFT_ASSIGN ('<-') or EQ_ASSIGN ('=')
+          badcode <- any(parse_data$token %in% c("LEFT_ASSIGN", "EQ_ASSIGN"))
+          if (badcode) {
+            msg.err.fatal <- paste0("Illegal operation: Validation contains an assignment operator[", df.input, "$", curr_col, "].\n")
+            stop(msg.err.fatal)
+          }
+          
+          # Execute the validation
+          validation_failed <- eval(parse(text = constraint_str))
+          
+          # Handle validation result
+          if (validation_failed) {
+            msg.err <- paste0("[", df.input, "$", curr_col, "] ", constraint_err, "!\n")
+            stop(msg.err)
+          } else {
+            #if (!curr_col==prev_col) {
+            if (i==sch_rows) {
+              # Close progress message of final column
+              cat("passed\n", sep="")
+            }
+          }
+          
+          prev_col <- curr_col
+          
+        }  # END "if ( !curr_col=="" && !constraint_str=="" )"
+      }  # END "(i in 1:nrow(curr_sch))"
+    }
+    
+  }  # END "for (df.input in df.input.list)"
+    
+
   ############################################
   # Check that all cover field are proportions,
   # not percentages. Stop and throw error message 
   # if one or more dfs contain percentages
   ############################################
   
+  # Turn on so warnings display inside loop with associated data frames 
+  old_warn <- options(warn = 1) 
+  
   # Prune indicator data frames
-  cat("Checking input data frames for illegal values of 'cover':\n")
+  cat("Checking for illegal values of 'cover':\n")
   any.bad.cover <- FALSE
   
   for (df.input in df.input.list.b) {
@@ -209,6 +308,9 @@ if ( QH.METHOD=="empirical" ) {   # START QH.METHOD=="empirical" #2
     #cat(msg)
     stop(msg)
   } 
+
+  # Revert global warning display to original setting
+  options(old_warn) 
   
   ############################################
   # Prune plots and data for all land cover
@@ -339,7 +441,7 @@ if ( QH.METHOD=="empirical" ) {   # START QH.METHOD=="empirical" #2
         reps <- length(veg.ei)
         df.whitelist.ei <- cbind(  as.data.frame(rep(ei,reps)), as.data.frame(rep("nostrata", reps)), as.data.frame(veg.ei) )
         colnames( df.whitelist.ei ) <- c("EI", "stratum", "bm.vegetation" )
-        
+
         # Default for 'include' is blank. Only set to true (T) if restoring 
         # following previous exclusion by blacklist
         df.whitelist.ei$include <- ""    
