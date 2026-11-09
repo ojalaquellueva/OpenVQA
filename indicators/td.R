@@ -313,6 +313,85 @@ if ( PLOT.FIGS.ONLY==FALSE ) {
 	    
 	    n.plots.after <-  length( unique( dat$plotCode ) )
 	    cat( "- Plots before: ", n.plots.before, ", plots after: ", n.plots.after, "\n")
+	    
+	    #######################################################
+	    # Now handle orphan benchmark plots for which all focal
+	    # plots were removed. Will remove later when append the 
+	    # "zero.data.plot" focal plots previously removed as 
+	    # outliers. 
+	    #######################################################
+	    
+	    # Identify the orphan benchmark vegClasses
+	    vegClasses <- unique(dat$vegClass)
+	    focalVegClasses <- unique(dat$vegClass[ dat$focalOrBenchmark=="f"])
+	    orphanVegClasses <- setdiff(vegClasses, focalVegClasses)
+	    
+	    # Duplicate the orphan benchmark data in a new data frame
+	    dat.bm.orphan <- dat[ dat$vegClass %in% orphanVegClasses, ]
+	    
+	    # Append suffixes to plotCodes and landCover to mark them
+	    # as simulated data
+	    dat.bm.orphan$plotCode <- paste0(dat.bm.orphan$plotCode, "_simdata")
+	    dat.bm.orphan$landCover <- paste0(dat.bm.orphan$landCover, "_simdata")
+	    
+	    # Change focalOrBenchmark from "b" to "f"
+	    dat.bm.orphan$focalOrBenchmark <- "f"
+	    
+	    # Rename for clarity
+	    dat.sim  <- dat.bm.orphan
+	    rm(dat.bm.orphan)
+
+	    #######################################################
+	    # Add controlled random variation to cover values so
+	    # they do not crash the NMDS
+	    #######################################################
+	    
+	    #######################################################
+	    # Step 1: reduce species
+	    #######################################################
+	    
+	    # Split row indices by plot
+	    plot.rows <- split(seq_len(nrow(dat.sim)), dat.sim$plot)
+	    
+	    # Randomly select rows to remove
+	    rows.remove <- unlist(lapply(plot.rows, function(idx) {
+	      
+	      n <- length(idx)
+	      
+	      if (n <= 3) return(integer(0))
+	      
+	      n.remove <- sample(0:floor((n - 3) / 3), 1)
+	      
+	      if (n.remove == 0) return(integer(0))
+	      
+	      sample(idx, n.remove)
+	      
+	    }), use.names = FALSE)
+	    
+	    # Remove selected observations
+	    dat.sim <- dat.sim[!(seq_len(nrow(dat.sim)) %in% rows.remove), , drop = FALSE]
+	    
+	    #######################################################
+	    # Step 2: add random noise to cover
+	    #######################################################
+	    
+	    max.variation <- 0.25
+	    
+	    # Maximum logit-scale perturbation
+	    delta <- qlogis(0.5 + max.variation)
+	    
+	    # Add uniformly distributed random noise on logit scale
+	    dat.sim$cover <- plogis(
+	      qlogis(dat.sim$cover) +
+	        runif(nrow(dat.sim), -delta, delta)
+	    )
+	    
+	    #######################################################
+	    # Finally: append simulated data to main data frame
+	    #######################################################
+
+	    dat <- rbind(dat, dat.sim)
+	    
 		}
 
 		#######################################################
@@ -785,7 +864,6 @@ if ( PLOT.FIGS.ONLY==FALSE ) {
 		  write.csv(td.outliers, file=outlier.file, row.names=FALSE)
 		  cat("done\n")
 		}
-		
 
 		cat("Appending outliers and focal plots with no data")
 		# Add column "no_data_plot"
@@ -833,8 +911,6 @@ if ( PLOT.FIGS.ONLY==FALSE ) {
 		    }
 		    
 		    cat("- Flagging no-data plots...")
-		    # TdPlot_missing$no_data_plot[ is.na(TdPlot_missing$outlier) ] <- TRUE
-		    # TdPlot_missing$no_data_plot[ is.na(TdPlot_missing$no_data_plot) ] <- FALSE
 		    TdPlot_missing$no_data_plot <- TRUE
 		    cat("done\n")
 		    
@@ -845,10 +921,11 @@ if ( PLOT.FIGS.ONLY==FALSE ) {
 		    TdPlot_bm <- TdPlot[TdPlot$focalOrBenchmark=="b",]
 		    TdPlot_f <- TdPlot[TdPlot$focalOrBenchmark=="f",]
 		    
-		    # EI
+		    # Calculate EI mean and SD by vegClass for non-missing plots
 		    EI.means <- aggregate( 
 		      EI~vegClass, 
-		      data=TdPlot_bm,
+		     # data=TdPlot_bm,  # Mistake; should use focal plot variation
+		      data=TdPlot_f,
 		      FUN=base::mean
 		      )
 		    colnames(EI.means) <- c("vegClass", "EI.mean")
@@ -875,10 +952,11 @@ if ( PLOT.FIGS.ONLY==FALSE ) {
 		    TdPlot_missing <- merge(TdPlot_missing, EI.vals, by="vegClass", all.x=TRUE)
 		    TdPlot_missing <- df.reorder(TdPlot_missing, col.move="EI", col.before="converged")
 		    
-		    # EI.tr
+		    # Calculate EI.tr mean and SD by vegClass for non-missing plots
 		    EI.means <- aggregate( 
 		      EI.tr~vegClass, 
-		      data=TdPlot_bm,
+		      # data=TdPlot_bm,  # Mistake; should use focal plot variation
+		      data=TdPlot_f,
 		      FUN=base::mean
 		    )
 		    colnames(EI.means) <- c("vegClass", "EI.mean")
@@ -901,10 +979,53 @@ if ( PLOT.FIGS.ONLY==FALSE ) {
 		    EI.vals$EI.tr <- EI.vals$EI.mean + (EI.vals$EI.sd * NODATA.SD )
 		    EI.vals <- EI.vals[,c("vegClass", "EI.tr")]
 
+		    # Merge in no.data plot EI values	
 		    TdPlot_missing <- TdPlot_missing[, !names(TdPlot_missing)=="EI.tr"]
 		    TdPlot_missing <- merge(TdPlot_missing, EI.vals, by="vegClass", all.x=TRUE)
 		    TdPlot_missing <- df.reorder(TdPlot_missing, col.move="EI.tr", col.before="EI")
 		    cat("done\n")
+
+		    # Check for missing plots still not updated
+		    # These are plots with bm vegetation (vegClass) not represented among the
+		    # non-missing plots. For these plots, assign EI and EI.tr based on all plots
+		    if ( any(is.na(TdPlot_missing$EI)) ) {
+		      # Data frame WITHOUT the NA rows
+		      non_na_indexes <- which(!is.na(TdPlot_missing$EI))
+		      TdPlot_missing_clean <- TdPlot_missing[non_na_indexes, ]
+
+		      # Data frame with ONLY the NA rows
+		      na_indexes <- which(is.na(TdPlot_missing$EI))
+		      TdPlot_missing <- TdPlot_missing[na_indexes, ]
+
+		      # Calculate EI mean and SD by vegClass for non-missing plots
+		      EI.mean <- mean(TdPlot_bm$EI)
+		      # EI.mean <- mean(TdPlot_f$EI)
+		      EI.sd.bm <- sd(TdPlot_bm$EI)
+		      EI.sd.f <- sd(TdPlot_f$EI)
+		      EI.sd <- max(EI.sd.bm, EI.sd.f)
+		      EI.missing <- EI.mean + (EI.sd * NODATA.SD )
+
+		      # Populate the missing EI values
+		      TdPlot_missing$EI <- EI.missing
+
+		      # Calculate EI.tr mean and SD by vegClass for non-missing plots
+		      # EI.tr.mean <- mean(TdPlot_bm$EI.tr)
+		      EI.tr.mean <- mean(TdPlot_f$EI.tr)
+		      EI.tr.sd.bm <- sd(TdPlot_bm$EI.tr)
+		      EI.tr.sd.f <- sd(TdPlot_f$EI.tr)
+		      EI.tr.sd <- max(EI.tr.sd.bm, EI.tr.sd.f)
+		      EI.tr.missing <- EI.tr.mean + (EI.tr.sd * NODATA.SD )
+
+		      # Populate the missing EI.tr values
+		      TdPlot_missing$EI.tr <- EI.tr.missing
+
+		      if (nrow(TdPlot_missing_clean)>0) {
+		        TdPlot_missing <- rbind(TdPlot_missing, TdPlot_missing_clean)
+		      }
+		    }
+
+		    # Remove simulated focal data, it's done its job	
+		    TdPlot <- TdPlot[!grepl("_simdata$", TdPlot$plotCode), ]
 		    
 		    cat("- Appending no-data plots to main results data frame...")
 		    TdPlot <- rbind( TdPlot, TdPlot_missing )

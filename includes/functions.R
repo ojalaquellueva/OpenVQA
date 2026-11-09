@@ -6233,18 +6233,9 @@ gcd <- function(lat1, lon1, lat2, lon2) {
 # Misc functions
 ############################################
 
-stop_quietly <- function(exit.msg=NULL) {
-	# Workaround for idiotic inability of R to stop without throwing error
-	# Modified from: https://stackoverflow.com/a/42945293/2757825
-	opt <- options(show.error.messages = FALSE)
-	on.exit(options(opt))
-	
-	if ( is.null(exit.msg) ) {
-		stop()
-	} else {
-		cat(exit.msg)
-		stop()		
-	}
+stop_quietly <- function(exit.msg = NULL) {
+  # Workaround for inability of R to stop without throwing unwanted extra error messages
+  stop(exit.msg, call. = FALSE)
 }
 
 quiet <- function(code){
@@ -6651,4 +6642,70 @@ run_column_validation <- function(target_df, csv_expr_string, error_msg = "Valid
   }
 }
 
+df.inspect <- function(df, n.rows=NULL, row.inds=NULL) {
+  ##########################################################
+  # Inspect data frame schema and example data
+  #
+  # Displays data frame columns vertically on left, followed
+  # by n.rows example rows, starting from row 1. If argument
+  # row.inds is supplied, n.rows is ignored and the submitted
+  # row indexes are used instead. This is a convenience function 
+  # which avoids having to type e.g., `noquote(t(df[1:3,]))`.
+  #
+  # Notes:
+  # 1. n.rows must be a positive whole number (e.g., 3 or 3L) 
+  # 2. row.inds accepts ordinary R numeric indexing 
+  #    expressions, such as 102:104 or c(2, 5, 8)
+  ##########################################################
+  
+  # Capture data frame name as text for messages
+  df_name <- deparse(substitute(df))
+  
+  # Check if the object is a data frame
+  if ( !is.data.frame(df) ) {
+    stop_quietly(paste0("Object '", df_name, "' is not a data frame!"))
+  }
+  
+  if (nrow(df) == 0L) {
+    stop_quietly("Data frame contains no rows.")
+  }
+  
+  if ( is.null(row.inds) ) {
+    # Use n.rows
+    
+    # Set default value
+    if ( is.null(n.rows) ) n.rows <- 3
+    
+    # Confirm n.rows is a valid integer
+    if ( !is.numeric(n.rows) || length(n.rows) != 1L || is.na(n.rows) || 
+        !is.finite(n.rows) || n.rows %% 1 != 0 || n.rows < 1 ) {
+      stop_quietly(paste0("Value of argument n.rows (", n.rows, ") is not an integer!"))
+    }
+    
+    # Handle n.rows exceeding the data frame
+    n.rows <- min(n.rows, nrow(df))
+    
+    # Generate the display object
+    df_disp <- noquote(t(df[seq_len(n.rows), , drop = FALSE]))
+    
+  } else {
+    # Use row.inds
+    
+    # Validate row.inds
+    if ( !is.numeric(row.inds) || length(row.inds) == 0L ||
+        any(!is.finite(row.inds)) || any(row.inds %% 1 != 0) ) {
+      stop_quietly("row.inds must contain whole-number indices.")
+    }
+
+    # Reject invalid indices
+    if (any(row.inds < 1 | row.inds > nrow(df))) {
+      stop_quietly("row.inds contains out-of-range indices.")
+    }
+    
+    # Generate the display object
+    df_disp <- noquote(t(df[row.inds, , drop = FALSE]))
+  }
+  
+  return(df_disp)
+}
 

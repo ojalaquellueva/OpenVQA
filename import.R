@@ -42,11 +42,13 @@ source("includes/functions.R", local=TRUE)
 # file in directory params/
 # Load global params file if not already loaded
 #if(!exists("global.params.loaded", mode="function")) source(paste0(SRCDIR, "params.R"))
-# Display parameters & confirm operation
+
+# Display section header
 op_name_pars <- "Load parameters"
 cat(rep("-", nchar(op_name_pars)), "\n", sep="")
 cat(op_name_pars, "\n", sep="")
 cat(rep("-", nchar(op_name_pars)), "\n", sep="")
+
 cat("General parameters file 'params.R'...done\n")
 source(paste0(SRCDIR, "params.R"))
 
@@ -59,10 +61,12 @@ if ( exists( "IMPORT.USE.ASSESS" )) {
   }
 }
 
-# Display parameters & confirm operation
+# Display operation header
 cat(rep("-", nchar(op_name)), "\n", sep="")
 cat(op_name, "\n", sep="")
 cat(rep("-", nchar(op_name)), "\n", sep="")
+
+# Display parameters & confirm operation
 cat(paste0("Import raw data for project '", PROJ, "', assessment '", ASSESS, "' using the following settings: \n", sep=""))
 cat("  Project-specific import file: '", ps.import.file.name, "'\n", sep="")
 cat(paste0(MSG.CONF.START, MSG.CONF.IMP))
@@ -188,6 +192,7 @@ if ( QH.METHOD=="empirical" ) {   # START QH.METHOD=="empirical" #2
       sch_cols <- sch_cols[!(sch_cols %in% c("notes", "Notes", "comments", "Comments"))]
       curr_df_cols <- unique(names(curr_df))
       missing_cols <- setdiff(sch_cols, curr_df_cols)
+      extra_cols <- setdiff(curr_df_cols, sch_cols)
       
       if (length(missing_cols>0)) {
         msg.err <- "ERROR: the following column(s) are missing!\n"
@@ -196,7 +201,16 @@ if ( QH.METHOD=="empirical" ) {   # START QH.METHOD=="empirical" #2
       } else {
         cat("passed\n")
       }
-      
+
+      cat("-- Checking for extra columns...")
+      if (length(extra_cols>0)) {
+        msg.warn <- "WARNING: the following extra columns (not in VQA schema) may cause problems:\n"
+        msg.warn <- paste0(msg.warn, "   ", paste(extra_cols, collapse = ", "), "\n")
+        cat(msg.warn)
+      } else {
+        cat("passed\n")
+      }
+
       # Apply column-by-column validations
       cat("-- Validating columns:\n", sep="")
       sch_rows <- nrow(curr_sch)
@@ -317,7 +331,8 @@ if ( QH.METHOD=="empirical" ) {   # START QH.METHOD=="empirical" #2
   # classes having one or more indicators 
   # with sample sizes below N.MIN.ABS.
   # Also prune any orphan benchmark plots & 
-  # their data. Requires "df.plot" from 
+  # their data. Some steps require 
+  # "df.plot.zero.cover" from the 
   # project-specific import script
   ############################################
   

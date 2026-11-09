@@ -59,16 +59,9 @@ LIB.LOAD.SILENT <- TRUE
 # Functions needed before loading general functions
 #######################################################
 
-stop_quietly <- function(exit.msg=NULL) {
-  opt <- options(show.error.messages = FALSE)
-  on.exit(options(opt))
-  
-  if ( is.null(exit.msg) ) {
-    stop()
-  } else {
-    cat(exit.msg)
-    stop()		
-  }
+stop_quietly <- function(exit.msg = NULL) {
+  # Stop without throwing unwanted extra error messages
+  stop(exit.msg, call. = FALSE)
 }
 
 ##################################################
