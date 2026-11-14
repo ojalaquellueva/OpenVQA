@@ -6658,6 +6658,9 @@ df.inspect <- function(df, n.rows=NULL, row.inds=NULL) {
   #    expressions, such as 102:104 or c(2, 5, 8)
   ##########################################################
   
+  # Default number of rows to display
+  n.rows.default <- 1
+  
   # Capture data frame name as text for messages
   df_name <- deparse(substitute(df))
   
@@ -6674,7 +6677,7 @@ df.inspect <- function(df, n.rows=NULL, row.inds=NULL) {
     # Use n.rows
     
     # Set default value
-    if ( is.null(n.rows) ) n.rows <- 3
+    if ( is.null(n.rows) ) n.rows <- n.rows.default
     
     # Confirm n.rows is a valid integer
     if ( !is.numeric(n.rows) || length(n.rows) != 1L || is.na(n.rows) || 

@@ -18,7 +18,6 @@
 # Name of this operation
 op_name <- "Import & normalize raw data"
 
-
 #########################################
 # Set paths, load functions & parameters
 #########################################
@@ -167,7 +166,7 @@ if ( QH.METHOD=="empirical" ) {   # START QH.METHOD=="empirical" #2
   }
   
   ######################################
-  # Validate schema for each input file
+  # Validate input files
   ######################################
   
   cat("Validating schemas:\n")
@@ -383,7 +382,7 @@ if ( QH.METHOD=="empirical" ) {   # START QH.METHOD=="empirical" #2
       eval(parse( text=cmd ))
       cat("done\n")
     }
-  }
+  }  # END "if (DELETE.LC.BELOW.N.MIN.ABS==TRUE)"
   
   ############################################
   # Add basal area to speciesStems if exists 
