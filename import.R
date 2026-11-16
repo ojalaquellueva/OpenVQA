@@ -165,6 +165,76 @@ if ( QH.METHOD=="empirical" ) {   # START QH.METHOD=="empirical" #2
     stop( msg )
   }
   
+  ############################################
+  # Prune plots and data for all land cover
+  # classes having one or more indicators 
+  # with sample sizes below N.MIN.ABS.
+  # Also prune any orphan benchmark plots & 
+  # their data. Some steps require 
+  # "df.plot.zero.cover" from the 
+  # project-specific import script
+  ############################################
+  
+  if (DELETE.LC.BELOW.N.MIN.ABS==TRUE) { 
+    cat("Removing data for plots with land cover having sample sizes below N.MIN.ABS:\n")
+    
+    # Make list of land cover classes to keep
+    cat("- Preparing list of land cover classes to keep...")
+    lc.keep <- unique( lc.summary[ 
+      lc.summary$all.n.OK==TRUE,
+      c("landCover")
+    ])
+    cat("done\n")
+    
+    # Remove focal plots by landCover & make vector of focal plots to keep
+    cat("- Dropping landCover classes with plot sample sizes below N.MIN.ABS...")
+    bad.lc <- unique( landCover$landCover[ landCover$all.n.OK==FALSE ] )
+    landCover <- landCover[ !landCover$landCover %in% bad.lc, ]
+    cat("done\n")
+    
+    # Remove focal plots by landCover & make vector of focal plots to keep
+    cat("- Dropping plots from 'plotMetadata':\n")
+    cat("-- Dropping focal plots by landCover class...")
+    plotMetadata <- plotMetadata[ ( plotMetadata$landCover %in% lc.keep & plotMetadata$focalOrBenchmark=='f') | plotMetadata$focalOrBenchmark=='b', ]
+    f.plots.keep <- unique( plotMetadata$plotCode[ plotMetadata$focalOrBenchmark=='f' ] )
+    cat("done\n")
+    
+    # Now identify and drop orphan benchmark plots
+    cat("-- Dropping orphan benchmark plots...")
+    bm.plots.all <- plotMetadata[ plotMetadata$focalOrBenchmark=='b', c("plotCode", "vegClass") ]
+    f.vegClasses <- as.data.frame( unique( plotMetadata$vegClass[ plotMetadata$focalOrBenchmark=='f' ] ) )
+    colnames( f.vegClasses ) <- "vegClass"
+    df.bm.plots.keep <- merge( bm.plots.all, f.vegClasses )
+    bm.plots.keep <- df.bm.plots.keep$plotCode
+    plotMetadata <- plotMetadata[ ( plotMetadata$plotCode %in% bm.plots.keep & plotMetadata$focalOrBenchmark=='b') | plotMetadata$focalOrBenchmark=='f', ]
+    cat("done\n")
+    
+    # Make vector of all plots to keep
+    cat("-- Preparing list of plots to keep...")
+    plots.keep <- c( f.plots.keep, bm.plots.keep )
+    cat("done\n")
+    
+    # Prune indicator data frames
+    cat("- Dropping plots from indicator data frames:\n")
+    for (df.input in df.input.list.b) {
+      cat(paste0("-- ", df.input, "..."))
+      cmd <- paste0( df.input, " <- ", df.input, "[ ", df.input, "$plotCode %in% plots.keep, ]" )
+      eval(parse( text=cmd ))
+      cat("done\n")
+    }
+  }  # END "if (DELETE.LC.BELOW.N.MIN.ABS==TRUE)"
+  
+  ############################################
+  # Add basal area to speciesStems if exists 
+  ############################################
+  
+  if ( "speciesStems" %in% df.input.list  ) {
+    cat("Calculating basal area and adding to df speciesStems...")
+    speciesStems$ba_m2 <- pi * ( ( speciesStems$dbh_cm / 2 )^2 ) / 10000
+    speciesStems <- df.reorder( speciesStems, col.move="ba_m2", col.before="dbh_cm" )
+    cat("done\n") 
+  }
+
   ######################################
   # Validate input files
   ######################################
@@ -324,76 +394,6 @@ if ( QH.METHOD=="empirical" ) {   # START QH.METHOD=="empirical" #2
 
   # Revert global warning display to original setting
   options(old_warn) 
-  
-  ############################################
-  # Prune plots and data for all land cover
-  # classes having one or more indicators 
-  # with sample sizes below N.MIN.ABS.
-  # Also prune any orphan benchmark plots & 
-  # their data. Some steps require 
-  # "df.plot.zero.cover" from the 
-  # project-specific import script
-  ############################################
-  
-  if (DELETE.LC.BELOW.N.MIN.ABS==TRUE) { 
-    cat("Removing data for plots with land cover having sample sizes below N.MIN.ABS:\n")
-    
-    # Make list of land cover classes to keep
-    cat("- Preparing list of land cover classes to keep...")
-    lc.keep <- unique( lc.summary[ 
-      lc.summary$all.n.OK==TRUE,
-      c("landCover")
-    ])
-    cat("done\n")
-    
-    # Remove focal plots by landCover & make vector of focal plots to keep
-    cat("- Dropping landCover classes with plot sample sizes below N.MIN.ABS...")
-    bad.lc <- unique( landCover$landCover[ landCover$all.n.OK==FALSE ] )
-    landCover <- landCover[ !landCover$landCover %in% bad.lc, ]
-    cat("done\n")
-
-    # Remove focal plots by landCover & make vector of focal plots to keep
-    cat("- Dropping plots from 'plotMetadata':\n")
-    cat("-- Dropping focal plots by landCover class...")
-    plotMetadata <- plotMetadata[ ( plotMetadata$landCover %in% lc.keep & plotMetadata$focalOrBenchmark=='f') | plotMetadata$focalOrBenchmark=='b', ]
-    f.plots.keep <- unique( plotMetadata$plotCode[ plotMetadata$focalOrBenchmark=='f' ] )
-    cat("done\n")
-    
-    # Now identify and drop orphan benchmark plots
-    cat("-- Dropping orphan benchmark plots...")
-    bm.plots.all <- plotMetadata[ plotMetadata$focalOrBenchmark=='b', c("plotCode", "vegClass") ]
-    f.vegClasses <- as.data.frame( unique( plotMetadata$vegClass[ plotMetadata$focalOrBenchmark=='f' ] ) )
-    colnames( f.vegClasses ) <- "vegClass"
-    df.bm.plots.keep <- merge( bm.plots.all, f.vegClasses )
-    bm.plots.keep <- df.bm.plots.keep$plotCode
-    plotMetadata <- plotMetadata[ ( plotMetadata$plotCode %in% bm.plots.keep & plotMetadata$focalOrBenchmark=='b') | plotMetadata$focalOrBenchmark=='f', ]
-    cat("done\n")
-    
-    # Make vector of all plots to keep
-    cat("-- Preparing list of plots to keep...")
-    plots.keep <- c( f.plots.keep, bm.plots.keep )
-    cat("done\n")
-    
-    # Prune indicator data frames
-    cat("- Dropping plots from indicator data frames:\n")
-    for (df.input in df.input.list.b) {
-      cat(paste0("-- ", df.input, "..."))
-      cmd <- paste0( df.input, " <- ", df.input, "[ ", df.input, "$plotCode %in% plots.keep, ]" )
-      eval(parse( text=cmd ))
-      cat("done\n")
-    }
-  }  # END "if (DELETE.LC.BELOW.N.MIN.ABS==TRUE)"
-  
-  ############################################
-  # Add basal area to speciesStems if exists 
-  ############################################
-  
-  if ( "speciesStems" %in% df.input.list  ) {
-    cat("Calculating basal area and adding to df speciesStems...")
-    speciesStems$ba_m2 <- pi * ( ( speciesStems$dbh_cm / 2 )^2 ) / 10000
-    speciesStems <- df.reorder( speciesStems, col.move="ba_m2", col.before="dbh_cm" )
-    cat("done\n") 
-  }
   
   ####################################################
   # Generate new whitelist and blacklist files

@@ -7,23 +7,35 @@
 # Latest update: 17 Feb 2023
 
 #######################
-# Parameters
+# Parameters and functions
 #######################
 
-# Critical! 
-# Determines data directories and params file used
-# Params file used=paste0("params.", PROJ, ".R")
-# Assessment code and everything else are set in the params file 
-PROJ <- "teck-ev"
-PROJ <- "vqa-pub"
-PROJ <- "teck-dpm"
-PROJ <- "teck-pom"
+if(!exists("params.loaded", mode="function")) {
+  # Set working directory (base application directory)
+  # Must set first to set remaining directory parameters
+  wd<-getwd()
+  setwd(wd)
+  SRCDIR <- paste0(wd, "/")
+}
+
+# Set job so params.R know which parameters to load
+job <- "vqa.power"
+
+# Load functions
+source("includes/functions.R", local=TRUE)
+
+# Display section header
+op_name_pars <- "Load parameters"
+cat(rep("-", nchar(op_name_pars)), "\n", sep="")
+cat(op_name_pars, "\n", sep="")
+cat(rep("-", nchar(op_name_pars)), "\n", sep="")
+
+cat("General parameters file 'params.R'...done\n")
+source(paste0(SRCDIR, "params.R"))
 
 ########################
-# Single vegetation class to process
-# Set the land cover you wish to model
-# FOR TESTING ONLY!
-# NOT USED UNLESS COMMENT OUT LOOP "veg loop"
+# Single benchmark vegetation class (vegClass) to process
+# FOR TESTING ONLY! NOT USED UNLESS COMMENT OUT LOOP "veg loop"
 ########################
 curr.veg <- "Alpine"	# DONE
 curr.veg <- "Alpine dwarf shrub"	# DONE
@@ -49,7 +61,14 @@ curr.veg <- "Mesic forest, Mature"
 # Landcover classes, not bm vegetation
 # Each version of df.veg will typically
 # be specific to one project only
+# 
 ########################
+
+##############################################
+# Saved land cover classes (df.veg)
+# Set df.veg by pasting one of these into the
+# next section, or pasting a new data frame
+##############################################
 
 # teck-ev and teck-ev.demo
 df.veg<-data.frame(veg=c(
@@ -136,6 +155,21 @@ df.veg <- data.frame( veg=c(
 "Western Hemlock - Western Red-cedar Cool-Mesic Central Rocky Mountain Forest & Woodland Alliance, Mature"
 ))
 
+##############################################
+# Land cover classes to process (df.veg)
+# Use a saved value from above, or paste a new
+# data frame of df.veg values
+##############################################
+
+# vqa.demo1
+df.veg <- data.frame( veg=c(
+  "BF/BS Forest, Early-Mid",
+  "BF/BS Forest, Early-Mid [Disturbed/Logged]",
+  "BF/BS Forest, Early-Mid [Established Rec]",
+  "BF/BS Forest, Early-Mid [Reclaimed]",
+  "Wetland [Reclaimed]"
+))
+
 ########################
 # Ecological ind (abbreviations) to process
 ########################
@@ -190,23 +224,24 @@ e.sizes <- c(0.15)
 e.sizes <- c(0.1, 0.15)
 e.sizes <- c(0.1)
 e.sizes <- c(0.05)
+e.sizes <- c(0.05, 0.1)
 
 # Target power for predicting minimum sample size
 # Recommend conventional power of 0.80
 pwr.target <- 0.8
 
-wd<-getwd()
-setwd(wd)
-
-params.file <- paste0("params.", PROJ, ".R")
-cat("Loading parameters file '", params.file, "'...", sep="")
-if ( file.copy(from=params.file, to="params.R", overwrite = TRUE)==FALSE ) {
-	stop("ERROR: file copy failed!\n")
-}
-cat("done\n\n")
-
-# load parameters
-source(params.file, local=TRUE)
+# wd<-getwd()
+# setwd(wd)
+# 
+# params.file <- paste0("params.", PROJ, ".R")
+# cat("Loading parameters file '", params.file, "'...", sep="")
+# if ( file.copy(from=params.file, to="params.R", overwrite = TRUE)==FALSE ) {
+# 	stop("ERROR: file copy failed!\n")
+# }
+# cat("done\n\n")
+# 
+# # load parameters
+# source(params.file, local=TRUE)
 
 # Get functional groups
 f.groups <- unique(EI.F.GROUPS[,2])
@@ -218,9 +253,9 @@ for (i in 1:length(f.groups)) {
 		fg.disp <- paste0( fg.disp, ", ", f.groups[i])
 	}
 }
-
-# load functions
-source(paste(INCLUDESDIR, "functions.R", sep=''), local=TRUE)
+# 
+# # load functions
+# source(paste(INCLUDESDIR, "functions.R", sep=''), local=TRUE)
 
 # Seed for bootstrap repeatability
 # NOTE: it matters where you place set.seed! 
@@ -232,10 +267,10 @@ do.set.seed <- FALSE			# Set randomization seed to fix results?
 seed <- 123				# Seed value. Only used if do.set.seed ==T
 
 # Main model parameters
-boot.reps <- 1000		# Number of bootstrap replications; ideal: 10000; never <1000
+boot.reps <- 100		# Number of bootstrap replications; ideal: 10000; never <1000
 sims <- 50					# No of replicates per power test (at each sample size); ideal: 1000
-n.start <- 27					# Starting (minimum) sample size
-n.final <- 33				# Final (maximum) sample size, up n.max (see below)
+n.start <- 3					# Starting (minimum) sample size
+n.final <- 18				# Final (maximum) sample size, up n.max (see below)
 									# set to very large number to use n.max
 n.cap <- "n.final"		# Cap max value of n at some value lower than n.final
 									# Values: "n.obs", "n.max", "n.min", "n.final", "".
@@ -316,10 +351,14 @@ msg_baddist <- "ERROR: Operation not supported for this distribution!"
 #################################
 
 # Raw data input files (in inputs/ folder)
-metadata.file <- "focal_summary.csv"	#  land cover metadata CHECK CORRECT?
-all.ind.list.file <- "dist.eval.csv"				# List of EIs & strata to include & exclude
-whitelist.file <- 'dist.eval.exceptions.csv' # Whitelist of landcover-specific 
-																	# exceptions to black list
+# metadata.file <- "focal_summary.csv"	#  land cover metadata CHECK CORRECT?
+# all.ind.list.file <- "dist.eval.csv"				# List of EIs & strata to include & exclude
+# whitelist.file <- 'dist.eval.exceptions.csv'  # Whitelist of landcover-specific 
+#                                               # exceptions to black list
+metadata.file <- "landCover.csv"	#  land cover metadata CHECK CORRECT?
+all.ind.list.file <- "ei.stratum.include.csv"				# List of EIs & strata to include & exclude
+whitelist.file <- 'ei.stratum.veg.include.csv' # Whitelist of landcover-specific 
+																	           # exceptions to black list
 
 ##############################################
 # Gather remaining EI attributes
@@ -401,17 +440,18 @@ cat("  n.step: ",  n.step, "\n", sep="" )
 cat("  reduce.observed: ",  reduce.observed, "\n", sep="" )
 cat("\n")	
 
-msg.conf <- "Continue? (y/n):"
-yes <- c("y", "Y", "Yes", "yes")
-
-if ( interactive() ) {
-	response <- readline(msg.conf)
-} else {
-	cat(msg.conf)
-	response <- readLines("stdin",n=1)
+if ( !interactive() ) {
+  # Only prompt to continue if running in command line
+  msg.conf <- "Continue? (y/n):"
+  yes <- c("y", "Y", "Yes", "yes")
+  response <- readline(msg.conf)
+	if ( ! response %in% yes ) stop_quietly("Operation cancelled\n\n")
 }
+# } else {
+# 	cat(msg.conf)
+# 	response <- readLines("stdin",n=1)
+# }
 
-if ( ! response %in% yes ) stop_quietly("Operation cancelled\n\n")
 main.title <- "Begin operation"
 cat(paste0(br, h.line, br, main.title, br, br ))
 
@@ -428,7 +468,8 @@ cat( "Importing metadata:\n")
 print( paste( "Importing  '", metadata.file, "'", sep="" ) )
 input.file <- paste(INPUTDIR, metadata.file, sep="")
 rawData <- read.csv(input.file, header=T )
-landcover <- unique(rawData[,c('landCoverCode','targetLandCoverCode')])
+# landcover <- unique(rawData[,c('landCoverCode','targetLandCoverCode')])
+landcover <- unique(rawData[,c('landCover','vegClass')])
 colnames(landcover)<-c('landcover','bm.vegetation')
 
 # Convert to human-readable versions of codes 
@@ -487,7 +528,7 @@ for (v in 1:nrow(df.veg)) {	### Begin veg loop
 		colnames(curr.ei.raw) <- c("plotCode", "focalOrBenchmark", "landcover", 
 			"bm.vegetation", "stratum", "ei.val")
 		curr.ei.raw$EI <- curr.ei
-			
+
 		if (e==1) {
 			# Make new data frame
 			dat.raw <- curr.ei.raw
@@ -514,7 +555,7 @@ for (v in 1:nrow(df.veg)) {	### Begin veg loop
 	# Select subset of data for current land cover class &
 	# determine sample size parameters
 	##############################################
-	
+
 	# Get raw focal data for current land cover class CHANGED
 	dat <- dat.raw[dat.raw$landcover == curr.veg , ]
 	
@@ -523,7 +564,7 @@ for (v in 1:nrow(df.veg)) {	### Begin veg loop
 	
 	# Get raw bm data for current land cover class
 	dat.bm <- dat.raw[dat.raw$bm.vegetation == curr.bm & dat.raw$focalOrBenchmark == 'b', ] 
-	
+
 	# Reset bm landcover to landcover being currently assessed
 	dat.bm$landcover <- curr.veg
 	
@@ -551,7 +592,6 @@ for (v in 1:nrow(df.veg)) {	### Begin veg loop
 	
 	n.f.max <- max( ei.all[ ei.all$focalOrBenchmark=='f', c('n') ] )
 	n.f.min <- min( ei.all[ ei.all$focalOrBenchmark=='f', c('n') ] )
-
 
 	n.b.max <- max( ei.all[ ei.all$focalOrBenchmark=='b', c('n') ] )
 	n.b.min <- min( ei.all[ ei.all$focalOrBenchmark=='b', c('n') ] )

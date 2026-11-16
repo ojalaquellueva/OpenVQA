@@ -4,6 +4,6 @@ plotCode,any(duplicated(plotMetadata$plotCode)),Some values of plotCode are dupl
 focalOrBenchmark,any(is.na(plotMetadata$focalOrBenchmark)),One or more values of 'focalOrBenchmark' are missing,,
 focalOrBenchmark,"any(!plotMetadata$focalOrBenchmark %in% c('f','b'))",Illegal value(s) of focalOrBenchmark; must be 'f' or 'b'.,,
 landCover,any(is.na(plotMetadata$landCover) | plotMetadata$landCover == ''),One or more values of 'landCover' are missing,,
-landCover,any(!plotMetadata$landCover %in% unique(landCover$landCover) ),One or more values of column landCover not in file landCover,,
+landCover,"any(!plotMetadata$landCover[ plotMetadata$focalOrBenchmark==""f"" ] %in% unique(landCover$landCover) )",One or more values of plotMetadata$landCover are not in file landCover,,
 vegClass,any(is.na(plotMetadata$vegClass) | (plotMetadata$vegClass == '') ),One or more values of 'vegClass' are missing,,
 vegClass,any(!plotMetadata$vegClass %in% unique(landCover$vegClass) ),One or more values of vegClass not in file landCover,,

@@ -158,8 +158,8 @@ rm(PROJ, ASSESS)
 # **** Paste PROJ & ASSESS below ****
 # ***********************************
 
-# Offset current assessment
-PROJ <- "teck-pom"
-ASSESS <- "offset_cca_baseline"
+# Project site current assessment
+PROJ <- "vqa-demo1"
+ASSESS <- 'main_001_current'
 
 
